@@ -29,6 +29,8 @@ public class NoteDao extends AbstractDao<Note, Long> {
         public final static Property State = new Property(3, Boolean.class, "state", false, "STATE");
         public final static Property Url = new Property(4, String.class, "url", false, "URL");
         public final static Property Contentid = new Property(5, String.class, "contentid", false, "CONTENTID");
+        public final static Property Date = new Property(6, String.class, "date", false, "DATE");
+        public final static Property Type = new Property(7, Integer.class, "type", false, "TYPE");
     };
 
 
@@ -49,7 +51,9 @@ public class NoteDao extends AbstractDao<Note, Long> {
                 "'PATH' TEXT," + // 2: path
                 "'STATE' INTEGER," + // 3: state
                 "'URL' TEXT," + // 4: url
-                "'CONTENTID' TEXT);"); // 5: contentid
+                "'CONTENTID' TEXT," + // 5: contentid
+                "'DATE' TEXT," + // 6: date
+                "'TYPE' INTEGER);"); // 7: type
     }
 
     /** Drops the underlying database table. */
@@ -88,6 +92,16 @@ public class NoteDao extends AbstractDao<Note, Long> {
         if (contentid != null) {
             stmt.bindString(6, contentid);
         }
+ 
+        String date = entity.getDate();
+        if (date != null) {
+            stmt.bindString(7, date);
+        }
+ 
+        Integer type = entity.getType();
+        if (type != null) {
+            stmt.bindLong(8, type);
+        }
     }
 
     /** @inheritdoc */
@@ -105,7 +119,9 @@ public class NoteDao extends AbstractDao<Note, Long> {
             cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // path
             cursor.isNull(offset + 3) ? null : cursor.getShort(offset + 3) != 0, // state
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // url
-            cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5) // contentid
+            cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5), // contentid
+            cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6), // date
+            cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7) // type
         );
         return entity;
     }
@@ -119,6 +135,8 @@ public class NoteDao extends AbstractDao<Note, Long> {
         entity.setState(cursor.isNull(offset + 3) ? null : cursor.getShort(offset + 3) != 0);
         entity.setUrl(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
         entity.setContentid(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
+        entity.setDate(cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6));
+        entity.setType(cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7));
      }
     
     /** @inheritdoc */

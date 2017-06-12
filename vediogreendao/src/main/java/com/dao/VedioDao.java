@@ -46,5 +46,7 @@ public class VedioDao {
         note.addBooleanProperty("state");
         note.addStringProperty("url");
         note.addStringProperty("contentid");
+        note.addStringProperty("date");
+        note.addIntProperty("type");
     }
 }

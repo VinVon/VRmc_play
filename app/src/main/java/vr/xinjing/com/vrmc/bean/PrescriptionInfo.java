@@ -22,7 +22,8 @@ public class PrescriptionInfo implements Serializable {
      * "creator":"00000000000000000000000000000001",
      * "createdAt":"2016-10-25 10:10:49",
      * "updator":"00000000000000000000000000000001",
-     * "updatedAt":"2016-10-25 14:25:18","contentId":"8a2b4be857e696e20157f99ab81f0006",
+     * "updatedAt":"2016-10-25 14:25:18",
+     * "contentId":"8a2b4be857e696e20157f99ab81f0006",
      * "content":"http://vod.dosnsoft.com/test/ijsKXh8AKD.mp4?Expires=1486711117&OSSAccessKeyId=LTAIJNwd9qadQHPz&Signature=DXT9LJd2NAiAj9gMNhInz3k%2BlxQ%3D"
      * },
      * "creator":"00000000000000000000000000000001",
@@ -91,6 +92,7 @@ public class PrescriptionInfo implements Serializable {
          * id : 8a2b4be857e696e20157f99ab81f0006
          * status : 2
          * updatedAt : 2016-10-25 14:25:18
+         *
          */
 
         private ExtBean ext;
@@ -108,6 +110,15 @@ public class PrescriptionInfo implements Serializable {
         private String id;
         private int status;
         private String updatedAt;
+        private String videoupdateAt;
+
+        public String getVideoupdateAt() {
+            return videoupdateAt;
+        }
+
+        public void setVideoupdateAt(String videoupdateAt) {
+            this.videoupdateAt = videoupdateAt;
+        }
 
         public ExtBean getExt() {
             return ext;

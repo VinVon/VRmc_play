@@ -13,6 +13,8 @@ public class Note {
     private Boolean state;
     private String url;
     private String contentid;
+    private String date;
+    private Integer type;
 
     public Note() {
     }
@@ -21,13 +23,15 @@ public class Note {
         this.id = id;
     }
 
-    public Note(Long id, String name, String path, Boolean state, String url, String contentid) {
+    public Note(Long id, String name, String path, Boolean state, String url, String contentid, String date, Integer type) {
         this.id = id;
         this.name = name;
         this.path = path;
         this.state = state;
         this.url = url;
         this.contentid = contentid;
+        this.date = date;
+        this.type = type;
     }
 
     public Long getId() {
@@ -78,6 +82,22 @@ public class Note {
 
     public void setContentid(String contentid) {
         this.contentid = contentid;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
     }
 
 }

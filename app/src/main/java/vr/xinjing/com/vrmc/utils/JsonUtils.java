@@ -193,6 +193,7 @@ public class JsonUtils {
             en.setContent(ob.getString("content"));
             dn.setExt(en);
             dn.setCreator(obj.getString("creator"));
+            dn.setVideoupdateAt(obj.getString("videoupdateAt"));
             dn.setHidden(obj.getInt("hidden"));
             dn.setRemark(obj.getString("remark"));
             dn.setHelpCode(obj.getString("helpCode"));

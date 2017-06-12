@@ -317,7 +317,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                     }
                     List<Note> all = noteService.getAll();//获得数据库所有文件的记录,来校验新获得的文件
                     List<PrescriptionInfo> newList = new ArrayList<>();
-
                     newList.addAll(ayncPath);
                     for (int i = 0; i < newList.size(); i++) {//添加数据
                         String FileName = getPathName(newList.get(i).getData().getExt().getContent());
@@ -325,20 +324,38 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             ayncPath.remove(newList.get(i));
                         } else if (FileName != null) {
                             if (noteService.isExist(FileName)) {
+                                Note noteByText = noteService.getNoteByText(FileName);
                                 File f = new File(IConstant.STROAGE_PATH + FileName);
                                 if (f.exists()) {
-                                    Note noteByText = noteService.getNoteByText(FileName);
-                                    noteByText.setUrl(newList.get(i).getData().getExt().getContent());
-                                    noteByText.setContentid(newLisst.get(i).getData().getId());
-                                    noteService.updateData(FileName, noteByText);
-                                    ayncPath.remove(newList.get(i));
+                                    if (newList.get(i).getData().getVideoupdateAt().equals(noteByText.getDate())){//相同视频未更新过
+//                                        Note noteByText = noteService.getNoteByText(FileName);
+                                        noteByText.setUrl(newList.get(i).getData().getExt().getContent());
+                                        noteByText.setContentid(newList.get(i).getData().getId());
+                                        noteService.updateData(FileName, noteByText);
+                                        ayncPath.remove(newList.get(i));
+                                    }else {//相同视频更新过
+                                        f.delete();
+                                        Note ci = new Note();
+                                        ci.setName(FileName);
+                                        ci.setState(false);
+                                        ci.setType(newList.get(i).getData().getType());
+                                        ci.setPath(IConstant.STROAGE_PATH + FileName);
+                                        ci.setUrl(newList.get(i).getData().getExt().getContent());
+                                        ci.setContentid(newList.get(i).getData().getId());
+                                        ci.setDate(newList.get(i).getData().getVideoupdateAt());
+                                        noteService.updateData(FileName, ci);
+                                        ayncPath.remove(newList.get(i));
+                                    }
+
                                 } else {
                                     Note ci = new Note();
                                     ci.setName(FileName);
                                     ci.setState(false);
+                                    ci.setType(newList.get(i).getData().getType());
                                     ci.setPath(IConstant.STROAGE_PATH + FileName);
                                     ci.setUrl(newList.get(i).getData().getExt().getContent());
-                                    ci.setContentid(newLisst.get(i).getData().getId());
+                                    ci.setContentid(newList.get(i).getData().getId());
+                                    ci.setDate(newList.get(i).getData().getVideoupdateAt());
                                     noteService.updateData(FileName, ci);
                                     ayncPath.remove(newList.get(i));
                                 }
@@ -347,8 +364,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                 n.setName(FileName);
                                 n.setPath(IConstant.STROAGE_PATH + FileName);
                                 n.setState(false);
+                                n.setType(newList.get(i).getData().getType());
                                 n.setUrl(newList.get(i).getData().getExt().getContent());
-                                n.setContentid(newLisst.get(i).getData().getId());
+                                n.setContentid(newList.get(i).getData().getId());
+                                n.setDate(newList.get(i).getData().getVideoupdateAt());
                                 noteService.insertNote(n);
                             }
                         }
@@ -361,6 +380,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                 PrescriptionInfo pp = new PrescriptionInfo();
                                 PrescriptionInfo.DataBean ppb = new PrescriptionInfo.DataBean();
                                 PrescriptionInfo.DataBean.ExtBean ppe = new PrescriptionInfo.DataBean.ExtBean();
+                                ppb.setType(all.get(i).getType());
+                                ppb.setUpdatedAt(all.get(i).getDate());
                                 ppb.setId(all.get(i).getContentid());
                                 ppe.setContent(all.get(i).getUrl());
                                 ppb.setExt(ppe);
@@ -374,6 +395,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                     PrescriptionInfo pp = new PrescriptionInfo();
                                     PrescriptionInfo.DataBean ppb = new PrescriptionInfo.DataBean();
                                     PrescriptionInfo.DataBean.ExtBean ppe = new PrescriptionInfo.DataBean.ExtBean();
+                                    ppb.setType(all.get(i).getType());
+                                    ppb.setUpdatedAt(all.get(i).getDate());
                                     ppb.setId(all.get(i).getContentid());
                                     ppe.setContent(all.get(i).getUrl());
                                     ppb.setExt(ppe);
@@ -396,7 +419,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             SYNintent = new Intent(MainActivity.this, DownFileService.class);
                             SYNintent.putExtra("downloadUrl", ayncPath.get(i).getData().getExt().getContent());
                             SYNintent.putExtra("count", i);
+                            SYNintent.putExtra("countnumber", ayncPath.size());
                             SYNintent.putExtra("Aynctime", NowAyncTime);
+                            SYNintent.putExtra("date", ayncPath.get(i).getData().getVideoupdateAt());
                             SYNintent.putExtra("type", ayncPath.get(i).getData().getType());
                             SYNintent.putExtra("ContentId", ayncPath.get(i).getData().getId());
                             Log.e("-------rengzai", ayncPath.get(i).getData().getExt().getContent());
@@ -404,8 +429,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                         } else {
                             SYNintent = new Intent(MainActivity.this, DownFileService.class);
                             SYNintent.putExtra("downloadUrl", ayncPath.get(i).getData().getExt().getContent());
-                            SYNintent.putExtra("count", -1);
+                            SYNintent.putExtra("count", i);
+                            SYNintent.putExtra("countnumber", ayncPath.size());
                             SYNintent.putExtra("Aynctime", NowAyncTime);
+                            SYNintent.putExtra("date", ayncPath.get(i).getData().getVideoupdateAt());
                             SYNintent.putExtra("type", ayncPath.get(i).getData().getType());
                             SYNintent.putExtra("ContentId", ayncPath.get(i).getData().getId());
                             Log.e("-------rengzai", ayncPath.get(i).getData().getExt().getContent());
@@ -663,8 +690,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             } else {
                                 SYNintent.putExtra("count", -1);
                             }
+                            SYNintent.putExtra("countnumber", all.size());
                             SYNintent.putExtra("Aynctime", NowAyncTime);
+                            SYNintent.putExtra("date", all.get(i).getDate());
                             SYNintent.putExtra("downloadUrl", all.get(i).getUrl());
+                            SYNintent.putExtra("type", all.get(i).getType());
+                            SYNintent.putExtra("ContentId", all.get(i).getContentid());
                             startService(SYNintent);
 
                         }

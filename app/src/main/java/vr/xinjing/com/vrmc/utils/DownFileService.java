@@ -58,29 +58,31 @@ public class DownFileService extends Service {
             Bundle bundle = intent.getExtras();
             String url = bundle.getString("downloadUrl");
             String time = bundle.getString("Aynctime");
+            String date = bundle.getString("date");
             String contentId = bundle.getString("ContentId");
             int type = bundle.getInt("type");
             Log.e("----downfile",url);
             int count = bundle.getInt("count");
+            int countnumber = bundle.getInt("countnumber");
 
                 if (url != null){
                     String name = url.substring(0,url.indexOf(".mp")+4);
                     names = name.substring(name.lastIndexOf("/")+1);
                     file = new File(IConstant.STROAGE_PATH+names);
-                    downLoadFile(url,file,count,time,contentId);
+                    downLoadFile(url,file,count,time,contentId,countnumber,date,type);
                 }
 
         }
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void downLoadFile(String url,File file,int count,String time,String contentId) {
+    private void downLoadFile(String url,File file,int count,String time,String contentId,int countnumber,String date,int type) {
 
         httpHandler = httpUtils.download(url, file.getAbsolutePath(), true, false, new RequestCallBack<File>() {
             @Override
             public void onSuccess(ResponseInfo<File> responseInfo) {
                 File result = responseInfo.result;
-                if (count != -1){
+                if ((countnumber-1) == count){
                     SpUtils.getInstance().saveLastAynvTime(time);
                     Log.e("------------downfileser","同步时间保存了");
                 }
@@ -90,6 +92,8 @@ public class DownFileService extends Service {
                     ci.setState(true);
                     ci.setPath(file.getAbsolutePath());
                     ci.setUrl(url);
+                    ci.setType(type);
+                    ci.setDate(date);
                     ci.setContentid(contentId);
                     noteService.updateData(result.getName(),ci);
                     Log.e("------------downfileser","数据库操作完成");
@@ -99,6 +103,8 @@ public class DownFileService extends Service {
                     ci.setState(true);
                     ci.setPath(file.getAbsolutePath());
                     ci.setUrl(url);
+                    ci.setType(type);
+                    ci.setDate(date);
                     ci.setContentid(contentId);
                     noteService.insertNote(ci);
                 }

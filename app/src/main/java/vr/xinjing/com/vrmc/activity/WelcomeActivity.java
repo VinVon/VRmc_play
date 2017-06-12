@@ -50,16 +50,16 @@ public class WelcomeActivity extends BaseActivity implements LoginView{
                 Environment.MEDIA_MOUNTED)) {
             String path = Environment.getExternalStorageDirectory()+"/vrmc/video/";
             File file = new File(path);
-            File file1 = new File(path,"123.mp3");
+//            File file1 = new File(path,"123.mp3");
             if (!file.exists()) // 判断目录是否存在，如果不存在，创建目录
-                file.mkdirs();
-            if (!file1.exists()){
-                try {
-                    file1.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            {file.mkdirs();}
+//            if (!file1.exists()){
+//                try {
+//                    file1.createNewFile();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
 
         }
 
