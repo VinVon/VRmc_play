@@ -173,44 +173,45 @@ public class JsonUtils {
         return prescriptionc;
     }
     //解析单一内容
-    public static PrescriptionInfo prescriptioninfoPares(String info){
-        PrescriptionInfo po = new PrescriptionInfo();
-        PrescriptionInfo.DataBean dn = new PrescriptionInfo.DataBean();
-        PrescriptionInfo.DataBean.ExtBean en = new PrescriptionInfo.DataBean.ExtBean();
-        try {
-            JSONObject object = new JSONObject(info);
-            po.setSuccess(object.getBoolean("success"));
-            po.setCode(object.getInt("code"));
-            po.setMessage(object.getString("message"));
-            JSONObject obj = object.getJSONObject("data");
-            JSONObject ob = obj.getJSONObject("ext");
-            en.setId(ob.getString("id"));
-//            en.setCreator(ob.getString("creator"));
-//            en.setCreatedAt(ob.getString("createdAt"));
-//            en.setUpdator(ob.getString("updator"));
-//            en.setUpdatedAt(ob.getString("updatedAt"));
-//            en.setContentId(ob.getString("contentId"));
-            en.setContent(ob.getString("content"));
-            dn.setExt(en);
-            dn.setCreator(obj.getString("creator"));
-            dn.setVideoupdateAt(obj.getString("videoupdateAt"));
-            dn.setHidden(obj.getInt("hidden"));
-            dn.setRemark(obj.getString("remark"));
-            dn.setHelpCode(obj.getString("helpCode"));
-            dn.setType(obj.getInt("type"));
-            dn.setCreatedAt(obj.getString("createdAt"));
-            dn.setIsFree(obj.getInt("isFree"));
-            dn.setPrice(obj.getDouble("price"));
-            dn.setName(obj.getString("name"));
-            dn.setUpdatedAt(obj.getString("updatedAt"));
-            dn.setUpdator(obj.getString("updator"));
-            dn.setCoverPic(obj.getString("coverPic"));
-            dn.setId(obj.getString("id"));
-            dn.setStatus(obj.getInt("status"));
-            po.setData(dn);
-        }catch (JSONException e){
-            e.printStackTrace();
-        }
-        return po;
-    }
+//    public static PrescriptionInfo prescriptioninfoPares(String info){
+//        PrescriptionInfo po = new PrescriptionInfo();
+//        PrescriptionInfo.DataBean dn = new PrescriptionInfo.DataBean();
+//        PrescriptionInfo.DataBean.ExtBean en = new PrescriptionInfo.DataBean.ExtBean();
+//        try {
+//            JSONObject object = new JSONObject(info);
+//            po.setSuccess(object.getBoolean("success"));
+//            po.setCode(object.getInt("code"));
+//            po.setMessage(object.getString("message"));
+//            JSONObject obj = object.getJSONObject("data");
+//            JSONObject ob = obj.getJSONObject("ext");
+//            en.setId(ob.getString("id"));
+////            en.setCreator(ob.getString("creator"));
+////            en.setCreatedAt(ob.getString("createdAt"));
+////            en.setUpdator(ob.getString("updator"));
+////            en.setUpdatedAt(ob.getString("updatedAt"));
+////            en.setContentId(ob.getString("contentId"));
+//            en.setContent(ob.getString("content"));
+//            dn.setExt(en);
+//            dn.setCreator(obj.getString("creator"));
+//
+//            dn.setHidden(obj.getInt("hidden"));
+//            dn.setVideoupdateAt(obj.getString("videoupdateAt"));
+//            dn.setRemark(obj.getString("remark"));
+//            dn.setHelpCode(obj.getString("helpCode"));
+//            dn.setType(obj.getInt("type"));
+//            dn.setCreatedAt(obj.getString("createdAt"));
+//            dn.setIsFree(obj.getInt("isFree"));
+//            dn.setPrice(obj.getDouble("price"));
+//            dn.setName(obj.getString("name"));
+//            dn.setUpdatedAt(obj.getString("updatedAt"));
+//            dn.setUpdator(obj.getString("updator"));
+//            dn.setCoverPic(obj.getString("coverPic"));
+//            dn.setId(obj.getString("id"));
+//            dn.setStatus(obj.getInt("status"));
+//            po.setData(dn);
+//        }catch (JSONException e){
+//            e.printStackTrace();
+//        }
+//        return po;
+//    }
 }

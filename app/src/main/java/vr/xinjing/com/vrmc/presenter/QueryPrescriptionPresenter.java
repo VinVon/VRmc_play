@@ -111,7 +111,8 @@ public class QueryPrescriptionPresenter {
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        Log.e("----------------user",user.toString());
+//                        String s  = user.toString();
+//                        Log.e("----------------user",user.getData().getVideoupdateAt());
                         queryPrescription.update(user,is);
                     }
                 });

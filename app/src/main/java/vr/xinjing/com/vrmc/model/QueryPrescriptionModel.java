@@ -17,6 +17,7 @@ import vr.xinjing.com.vrmc.bean.LoginInfo;
 import vr.xinjing.com.vrmc.bean.Prescription;
 import vr.xinjing.com.vrmc.bean.PrescriptionContent;
 import vr.xinjing.com.vrmc.bean.PrescriptionInfo;
+import vr.xinjing.com.vrmc.utils.GsonImpl;
 import vr.xinjing.com.vrmc.utils.JsonUtils;
 
 /**
@@ -107,7 +108,7 @@ public class QueryPrescriptionModel {
                     public Object parseNetworkResponse(Response response, int id) throws Exception {
                         String st = response.body().string();
 //                        Log.e("-------------内容",st);
-                        PrescriptionInfo prescriptionInfo = JsonUtils.prescriptioninfoPares(st);
+                        PrescriptionInfo prescriptionInfo = GsonImpl.get().toObject(st,PrescriptionInfo.class);
                         if (prescriptionInfo.getCode() == 0&& prescriptionInfo.getData()!=null) {//查询患者的处方列表成功
                             onLoginListener.loginSuccess(prescriptionInfo);
                         }

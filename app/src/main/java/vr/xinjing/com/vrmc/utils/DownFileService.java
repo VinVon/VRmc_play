@@ -61,7 +61,7 @@ public class DownFileService extends Service {
             String date = bundle.getString("date");
             String contentId = bundle.getString("ContentId");
             int type = bundle.getInt("type");
-            Log.e("----downfile",url);
+
             int count = bundle.getInt("count");
             int countnumber = bundle.getInt("countnumber");
 
@@ -76,13 +76,13 @@ public class DownFileService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void downLoadFile(String url,File file,int count,String time,String contentId,int countnumber,String date,int type) {
+    private void downLoadFile(String url,File file,int count,String time,String contentId,int cnm,String date,int type) {
 
         httpHandler = httpUtils.download(url, file.getAbsolutePath(), true, false, new RequestCallBack<File>() {
             @Override
             public void onSuccess(ResponseInfo<File> responseInfo) {
                 File result = responseInfo.result;
-                if ((countnumber-1) == count){
+                if ((cnm-1) == count){
                     SpUtils.getInstance().saveLastAynvTime(time);
                     Log.e("------------downfileser","同步时间保存了");
                 }

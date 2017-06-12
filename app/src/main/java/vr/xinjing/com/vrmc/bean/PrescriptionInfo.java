@@ -9,312 +9,281 @@ import java.io.Serializable;
 
 public class PrescriptionInfo implements Serializable {
 
+
     /**
      * success : true
      * code : 0
      * message : 获取单个内容成功
-     * data : {
-     * "id":"8a2b4be857e696e20157f99ab81f0006",
-     * "status":2,
-     * "updatedAt":"2016-10-25 14:25:18",
-     * "ext":{
-     * "id":"8a2b4be857e696e20157f99ab8320009",
-     * "creator":"00000000000000000000000000000001",
-     * "createdAt":"2016-10-25 10:10:49",
-     * "updator":"00000000000000000000000000000001",
-     * "updatedAt":"2016-10-25 14:25:18",
-     * "contentId":"8a2b4be857e696e20157f99ab81f0006",
-     * "content":"http://vod.dosnsoft.com/test/ijsKXh8AKD.mp4?Expires=1486711117&OSSAccessKeyId=LTAIJNwd9qadQHPz&Signature=DXT9LJd2NAiAj9gMNhInz3k%2BlxQ%3D"
-     * },
-     * "creator":"00000000000000000000000000000001",
-     * "hidden":0,
-     * "remark":"测试视频2",
-     * "helpCode":"video2",
-     * "type":1,
-     * "createdAt":"2016-10-25 10:10:49",
-     * "isFree":0,"price":400,
-     * "name":"测试视频2",
-     * "updator":"00000000000000000000000000000001",
-     * "coverPic":"http://static.dosnsoft.com/test%2F1477361448881.png"}
+     * data : {"ext":{"id":"8a2b4be857d718e70157db7204640008","content":"http://vod.med-vision.cn/?Expires=1497263415&OSSAccessKeyId=LTAIJNwd9qadQHPz&Signature=%2BFKPVLs9mxjpEdp1lQYEnU%2BbO/g%3D"},"creator":"00000000000000000000000000000001","hidden":0,"videoupdateAt":"2016-10-19 13:42:05","description":"测试音频1","remark":"测试音频1","helpCode":"audio1","type":2,"otherdisease":null,"duration":0,"createdAt":"2016-10-19 13:37:38","isFree":1,"price":0,"name":"测试音频1","clicks":0,"updator":"00000000000000000000000000000001","coverPic":"http://static.dosnsoft.com/test%2F1476855457995.png","id":"8a2b4be857d718e70157db71ea0b0007","status":2,"updatedAt":"2016-10-19 13:42:05"}
      */
 
     private boolean success;
     private int code;
     private String message;
-    private DataBean data;
+    /**
+     * ext : {"id":"8a2b4be857d718e70157db7204640008",
+     * "content":"http://vod.med-vision.cn/?Expires=1497263415&OSSAccessKeyId=LTAIJNwd9qadQHPz&Signature=%2BFKPVLs9mxjpEdp1lQYEnU%2BbO/g%3D"}
+     * creator : 00000000000000000000000000000001
+     * hidden : 0
+     * videoupdateAt : 2016-10-19 13:42:05
+     * description : 测试音频1
+     * remark : 测试音频1
+     * helpCode : audio1
+     * type : 2
+     * otherdisease : null
+     * duration : 0
+     * createdAt : 2016-10-19 13:37:38
+     * isFree : 1
+     * price : 0
+     * name : 测试音频1
+     * clicks : 0
+     * updator : 00000000000000000000000000000001
+     * coverPic : http://static.dosnsoft.com/test%2F1476855457995.png
+     * id : 8a2b4be857d718e70157db71ea0b0007
+     * status : 2
+     * updatedAt : 2016-10-19 13:42:05
+     */
 
-    public boolean isSuccess() {
-        return success;
-    }
+    private DataEntity data;
 
     public void setSuccess(boolean success) {
         this.success = success;
-    }
-
-    public int getCode() {
-        return code;
     }
 
     public void setCode(int code) {
         this.code = code;
     }
 
-    public String getMessage() {
-        return message;
-    }
-
     public void setMessage(String message) {
         this.message = message;
     }
 
-    public DataBean getData() {
-        return data;
-    }
-
-    public void setData(DataBean data) {
+    public void setData(DataEntity data) {
         this.data = data;
     }
 
-    public static class DataBean implements Serializable {
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public DataEntity getData() {
+        return data;
+    }
+
+    public static class DataEntity implements Serializable{
         /**
-         * ext : {"id":"8a2b4be857e696e20157f99ab8320009","creator":"00000000000000000000000000000001","createdAt":"2016-10-25 10:10:49","updator":"00000000000000000000000000000001","updatedAt":"2016-10-25 14:25:18","contentId":"8a2b4be857e696e20157f99ab81f0006","content":"http://vod.dosnsoft.com/test/ijsKXh8AKD.mp4?Expires=1486711117&OSSAccessKeyId=LTAIJNwd9qadQHPz&Signature=DXT9LJd2NAiAj9gMNhInz3k%2BlxQ%3D"}
-         * creator : 00000000000000000000000000000001
-         * hidden : 0
-         * remark : 测试视频2
-         * helpCode : video2
-         * type : 1
-         * createdAt : 2016-10-25 10:10:49
-         * isFree : 0
-         * price : 400.0
-         * name : 测试视频2
-         * updator : 00000000000000000000000000000001
-         * coverPic : http://static.dosnsoft.com/test%2F1477361448881.png
-         * id : 8a2b4be857e696e20157f99ab81f0006
-         * status : 2
-         * updatedAt : 2016-10-25 14:25:18
-         *
+         * id : 8a2b4be857d718e70157db7204640008
+         * content : http://vod.med-vision.cn/?Expires=1497263415&OSSAccessKeyId=LTAIJNwd9qadQHPz&Signature=%2BFKPVLs9mxjpEdp1lQYEnU%2BbO/g%3D
          */
 
-        private ExtBean ext;
+        private ExtEntity ext;
         private String creator;
         private int hidden;
+        private String videoupdateAt;
+        private String description;
         private String remark;
         private String helpCode;
         private int type;
+        private Object otherdisease;
+        private int duration;
         private String createdAt;
         private int isFree;
-        private double price;
+        private int price;
         private String name;
+        private int clicks;
         private String updator;
         private String coverPic;
         private String id;
         private int status;
         private String updatedAt;
-        private String videoupdateAt;
 
-        public String getVideoupdateAt() {
-            return videoupdateAt;
-        }
-
-        public void setVideoupdateAt(String videoupdateAt) {
-            this.videoupdateAt = videoupdateAt;
-        }
-
-        public ExtBean getExt() {
-            return ext;
-        }
-
-        public void setExt(ExtBean ext) {
+        public void setExt(ExtEntity ext) {
             this.ext = ext;
-        }
-
-        public String getCreator() {
-            return creator;
         }
 
         public void setCreator(String creator) {
             this.creator = creator;
         }
 
-        public int getHidden() {
-            return hidden;
-        }
-
         public void setHidden(int hidden) {
             this.hidden = hidden;
         }
 
-        public String getRemark() {
-            return remark;
+        public void setVideoupdateAt(String videoupdateAt) {
+            this.videoupdateAt = videoupdateAt;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
         }
 
         public void setRemark(String remark) {
             this.remark = remark;
         }
 
-        public String getHelpCode() {
-            return helpCode;
-        }
-
         public void setHelpCode(String helpCode) {
             this.helpCode = helpCode;
-        }
-
-        public int getType() {
-            return type;
         }
 
         public void setType(int type) {
             this.type = type;
         }
 
-        public String getCreatedAt() {
-            return createdAt;
+        public void setOtherdisease(Object otherdisease) {
+            this.otherdisease = otherdisease;
+        }
+
+        public void setDuration(int duration) {
+            this.duration = duration;
         }
 
         public void setCreatedAt(String createdAt) {
             this.createdAt = createdAt;
         }
 
-        public int getIsFree() {
-            return isFree;
-        }
-
         public void setIsFree(int isFree) {
             this.isFree = isFree;
         }
 
-        public double getPrice() {
-            return price;
-        }
-
-        public void setPrice(double price) {
+        public void setPrice(int price) {
             this.price = price;
-        }
-
-        public String getName() {
-            return name;
         }
 
         public void setName(String name) {
             this.name = name;
         }
 
-        public String getUpdator() {
-            return updator;
+        public void setClicks(int clicks) {
+            this.clicks = clicks;
         }
 
         public void setUpdator(String updator) {
             this.updator = updator;
         }
 
-        public String getCoverPic() {
-            return coverPic;
-        }
-
         public void setCoverPic(String coverPic) {
             this.coverPic = coverPic;
-        }
-
-        public String getId() {
-            return id;
         }
 
         public void setId(String id) {
             this.id = id;
         }
 
-        public int getStatus() {
-            return status;
-        }
-
         public void setStatus(int status) {
             this.status = status;
-        }
-
-        public String getUpdatedAt() {
-            return updatedAt;
         }
 
         public void setUpdatedAt(String updatedAt) {
             this.updatedAt = updatedAt;
         }
 
-        public static class ExtBean implements Serializable {
-            /**
-             * id : 8a2b4be857e696e20157f99ab8320009
-             * creator : 00000000000000000000000000000001
-             * createdAt : 2016-10-25 10:10:49
-             * updator : 00000000000000000000000000000001
-             * updatedAt : 2016-10-25 14:25:18
-             * contentId : 8a2b4be857e696e20157f99ab81f0006
-             * content : http://vod.dosnsoft.com/test/ijsKXh8AKD.mp4?Expires=1486711117&OSSAccessKeyId=LTAIJNwd9qadQHPz&Signature=DXT9LJd2NAiAj9gMNhInz3k%2BlxQ%3D
-             */
+        public ExtEntity getExt() {
+            return ext;
+        }
 
+        public String getCreator() {
+            return creator;
+        }
+
+        public int getHidden() {
+            return hidden;
+        }
+
+        public String getVideoupdateAt() {
+            return videoupdateAt;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public String getRemark() {
+            return remark;
+        }
+
+        public String getHelpCode() {
+            return helpCode;
+        }
+
+        public int getType() {
+            return type;
+        }
+
+        public Object getOtherdisease() {
+            return otherdisease;
+        }
+
+        public int getDuration() {
+            return duration;
+        }
+
+        public String getCreatedAt() {
+            return createdAt;
+        }
+
+        public int getIsFree() {
+            return isFree;
+        }
+
+        public int getPrice() {
+            return price;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getClicks() {
+            return clicks;
+        }
+
+        public String getUpdator() {
+            return updator;
+        }
+
+        public String getCoverPic() {
+            return coverPic;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public int getStatus() {
+            return status;
+        }
+
+        public String getUpdatedAt() {
+            return updatedAt;
+        }
+
+        public static class ExtEntity implements Serializable{
             private String id;
-            private String creator;
-            private String createdAt;
-            private String updator;
-            private String updatedAt;
-            private String contentId;
             private String content;
-
-            public String getId() {
-                return id;
-            }
 
             public void setId(String id) {
                 this.id = id;
             }
 
-            public String getCreator() {
-                return creator;
+            public void setContent(String content) {
+                this.content = content;
             }
 
-            public void setCreator(String creator) {
-                this.creator = creator;
-            }
-
-            public String getCreatedAt() {
-                return createdAt;
-            }
-
-            public void setCreatedAt(String createdAt) {
-                this.createdAt = createdAt;
-            }
-
-            public String getUpdator() {
-                return updator;
-            }
-
-            public void setUpdator(String updator) {
-                this.updator = updator;
-            }
-
-            public String getUpdatedAt() {
-                return updatedAt;
-            }
-
-            public void setUpdatedAt(String updatedAt) {
-                this.updatedAt = updatedAt;
-            }
-
-            public String getContentId() {
-                return contentId;
-            }
-
-            public void setContentId(String contentId) {
-                this.contentId = contentId;
+            public String getId() {
+                return id;
             }
 
             public String getContent() {
                 return content;
             }
-
-            public void setContent(String content) {
-                this.content = content;
-            }
         }
     }
-
 }

@@ -303,7 +303,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 //                startActivity(intent);
 
             } else { //需要同步内容详情的接口回调
-                Log.e("----下载url",p+"");
+                Log.e("----下载time",p.getData().getVideoupdateAt()+"");
                 ayncPath.add(p);
                 if (ayncPath.size() == needAynvcount) {
                     List<PrescriptionInfo> newLisst = new ArrayList<>();
@@ -327,6 +327,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                 Note noteByText = noteService.getNoteByText(FileName);
                                 File f = new File(IConstant.STROAGE_PATH + FileName);
                                 if (f.exists()) {
+                                    String t1 = newList.get(i).getData().getVideoupdateAt();
+                                    String t2 = noteByText.getDate();
                                     if (newList.get(i).getData().getVideoupdateAt().equals(noteByText.getDate())){//相同视频未更新过
 //                                        Note noteByText = noteService.getNoteByText(FileName);
                                         noteByText.setUrl(newList.get(i).getData().getExt().getContent());
@@ -378,10 +380,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 //                         if (handler.getRequestCallBack().getRequestUrl() == all.get(i).getUrl() && handler.isCancelled()){//获得数据库中没有进行的任务线程
                             if (!all.get(i).getState()) {//文件没有下载完成
                                 PrescriptionInfo pp = new PrescriptionInfo();
-                                PrescriptionInfo.DataBean ppb = new PrescriptionInfo.DataBean();
-                                PrescriptionInfo.DataBean.ExtBean ppe = new PrescriptionInfo.DataBean.ExtBean();
+                                PrescriptionInfo.DataEntity ppb = new PrescriptionInfo.DataEntity();
+                                PrescriptionInfo.DataEntity.ExtEntity ppe = new PrescriptionInfo.DataEntity.ExtEntity();
                                 ppb.setType(all.get(i).getType());
-                                ppb.setUpdatedAt(all.get(i).getDate());
+                                ppb.setVideoupdateAt(all.get(i).getDate());
                                 ppb.setId(all.get(i).getContentid());
                                 ppe.setContent(all.get(i).getUrl());
                                 ppb.setExt(ppe);
@@ -393,10 +395,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             if (handler.isCancelled()) {//获得数据库中没有进行的任务线程
                                 if (!all.get(i).getState()) {//文件没有下载完成
                                     PrescriptionInfo pp = new PrescriptionInfo();
-                                    PrescriptionInfo.DataBean ppb = new PrescriptionInfo.DataBean();
-                                    PrescriptionInfo.DataBean.ExtBean ppe = new PrescriptionInfo.DataBean.ExtBean();
+                                    PrescriptionInfo.DataEntity ppb = new PrescriptionInfo.DataEntity();
+                                    PrescriptionInfo.DataEntity.ExtEntity ppe = new PrescriptionInfo.DataEntity.ExtEntity();
                                     ppb.setType(all.get(i).getType());
-                                    ppb.setUpdatedAt(all.get(i).getDate());
+                                    ppb.setVideoupdateAt(all.get(i).getDate());
                                     ppb.setId(all.get(i).getContentid());
                                     ppe.setContent(all.get(i).getUrl());
                                     ppb.setExt(ppe);
@@ -424,7 +426,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             SYNintent.putExtra("date", ayncPath.get(i).getData().getVideoupdateAt());
                             SYNintent.putExtra("type", ayncPath.get(i).getData().getType());
                             SYNintent.putExtra("ContentId", ayncPath.get(i).getData().getId());
-                            Log.e("-------rengzai", ayncPath.get(i).getData().getExt().getContent());
+                            Log.e("-------rengzai", ayncPath.get(i).getData().getVideoupdateAt());
                             startService(SYNintent);
                         } else {
                             SYNintent = new Intent(MainActivity.this, DownFileService.class);
@@ -435,7 +437,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             SYNintent.putExtra("date", ayncPath.get(i).getData().getVideoupdateAt());
                             SYNintent.putExtra("type", ayncPath.get(i).getData().getType());
                             SYNintent.putExtra("ContentId", ayncPath.get(i).getData().getId());
-                            Log.e("-------rengzai", ayncPath.get(i).getData().getExt().getContent());
+                            Log.e("-------rengzai", ayncPath.get(i).getData().getVideoupdateAt());
                             startService(SYNintent);
                         }
 
