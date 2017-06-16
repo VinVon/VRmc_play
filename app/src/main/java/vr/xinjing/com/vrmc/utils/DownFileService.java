@@ -164,6 +164,7 @@ public class DownFileService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        httpHandler.cancel();
     }
 
     @Nullable

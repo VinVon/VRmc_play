@@ -6,9 +6,9 @@ package vr.xinjing.com.vrmc.UrlPath;
 
 public class UrlHttp {
     //测试地址czy.dd.dosnsoft.com
-//    public static final String BASE_URL="http://test.med-vision.cn/api/v1/";
+    public static final String BASE_URL="http://test.med-vision.cn/api/v1/";
     //正式地址
-    public static final String BASE_URL="http://support.med-vision.cn/api/v1/";
+//    public static final String BASE_URL="http://support.med-vision.cn/api/v1/";
     //登录
     public static final String PATH_LOGIN =BASE_URL+"appVrRoom/login";
     //获取患者接口

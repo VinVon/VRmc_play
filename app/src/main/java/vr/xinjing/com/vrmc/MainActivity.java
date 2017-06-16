@@ -93,6 +93,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     //    private BaseDao baseDao;
     private NoteService noteService;//数据库操作类
     private MyReceiver receiver; //定义接收指令的广播
+    private MyTimerTask timerTask;
     private Handler mHandler = new Handler() {
 
         @Override
@@ -136,7 +137,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 //        endTaskPresenter = new EndTaskPresenter(MainActivity.this);
         ayncp = new AyncTimePresenter(MainActivity.this);//获取同步内容的present
         getTaskPresenter = new TasklistPresenter(MainActivity.this);
-        mTimer.schedule(timerTask, 0, 1000 * 60 * 60 * 24);
+        if (mTimer != null){
+            if (timerTask != null){
+                timerTask.cancel();  //将原任务从队列中移除
+            }
+        }
+        timerTask = new MyTimerTask();
+        mTimer.schedule(timerTask, 0, 1000 * 60* 60 * 24);//
+
 
         //注册
         receiver = new MyReceiver();
@@ -308,6 +316,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                 if (ayncPath.size() == needAynvcount) {
                     List<PrescriptionInfo> newLisst = new ArrayList<>();
                     newLisst.addAll(ayncPath);
+                    if (last.size()!=0){
+                        last.clear();
+                    }
                     needAynvcount = 0;
                     for (int i = 0; i < newLisst.size(); i++) {
                         String FileName = getPathName(newLisst.get(i).getData().getExt().getContent());
@@ -381,6 +392,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                     all = noteService.getAll();//获得数据库所有文件的记录,来校验新获得的文件
                     for (int i = 0; i < all.size(); i++) {
                         if (handler == null) {
+                            Log.e("----handler==null","没有下载handler");
 //                         if (handler.getRequestCallBack().getRequestUrl() == all.get(i).getUrl() && handler.isCancelled()){//获得数据库中没有进行的任务线程
                             if (!all.get(i).getState()) {//文件没有下载完成
                                 PrescriptionInfo pp = new PrescriptionInfo();
@@ -397,7 +409,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             }
 //                         }
                         } else {
+                            Log.e("----handler!=null","有下载handler");
                             if (handler.isCancelled()) {//获得数据库中没有进行的任务线程
+                                Log.e("----handler=isCancelled","handler被取消了");
                                 if (!all.get(i).getState()) {//文件没有下载完成
                                     PrescriptionInfo pp = new PrescriptionInfo();
                                     PrescriptionInfo.DataBean ppb = new PrescriptionInfo.DataBean();
@@ -412,6 +426,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                     ayncPath.add(pp);
                                 }
                             } else {//该下载任务在下次刷新定时器时还处于执行状态
+                                Log.e("----handler=isCancelled","handler取消了");
                                 List<PrescriptionInfo> newLists = new ArrayList<>();
                                 newLists.addAll(ayncPath);
                                 for (int j = 0; j < newLists.size(); j++) {
@@ -586,13 +601,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     }
 
     // 计时器
-    TimerTask
-            timerTask = new TimerTask() {
+    class MyTimerTask extends TimerTask{
 
         @Override
         public void run() {
             LastAyncTime = getLastAyncTime();
             NowAyncTime = getNoewAyncTime();
+//            LastAyncTime = "2019-10-20 09:38:45";
             Log.e("-----------当前时间", LastAyncTime);
             Map<String, Object> ayncmap = new HashMap<>();
             ayncmap.put("token", token);
@@ -611,7 +626,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     //获取同步内容的回调
     @Override
     public void showsuccess(LastAyncInfo s) {
-        Log.e("---tongbu",s.getData().size()+"个");
+        Log.e("---tongbu",s.getData().size()+"个"+ayncPath.size());
         needAynvcounts = s.getData().size();
         needAynvcount += s.getData().size();
         if (needAynvcounts == 10) {//分页
@@ -626,7 +641,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             ayncp.setMap(ayncmap);
             ayncp.getAync();
         } else if (ayncPath.size() == 0 && needAynvcounts < 10) {//获得需要同步的url
-
+            paging = 1;
             for (int j = 0; j < s.getData().size(); j++) {
                 last.add(s.getData().get(j));
             }
