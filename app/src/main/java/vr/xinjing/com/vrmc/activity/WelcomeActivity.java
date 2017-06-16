@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +63,22 @@ public class WelcomeActivity extends BaseActivity implements LoginView{
 //            }
 
         }
-
+//        String path1 = Environment.getDataDirectory()+"/data/"+getPackageName();
+//
+//        File file1 = new File(path1);
+//        File file2 = new File(path1,"123.mp3");
+//        if (!file1.exists()) // 判断目录是否存在，如果不存在，创建目录
+//        {file1.mkdirs();
+//        }
+//                    if (!file2.exists()){
+//                try {
+//                    file2.createNewFile();
+//
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        Log.e("---url",file2.getAbsolutePath());
     }
     private Handler handler = new Handler() {
         @Override
@@ -141,4 +157,5 @@ public class WelcomeActivity extends BaseActivity implements LoginView{
     public void showError(String msg) {
 
     }
+
 }

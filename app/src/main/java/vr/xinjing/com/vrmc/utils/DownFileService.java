@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.StatFs;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -18,6 +19,7 @@ import com.lidroid.xutils.http.callback.RequestCallBack;
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
@@ -41,6 +43,7 @@ public class DownFileService extends Service {
     private String names;
     private File file;
     private NoteService noteService;//数据库操作类
+    private int conpletenumber= 0;//下载完成数
     @Override
     public void onCreate() {
         Log.e("--------------","onCreate开始咯");
@@ -61,52 +64,64 @@ public class DownFileService extends Service {
             String date = bundle.getString("date");
             String contentId = bundle.getString("ContentId");
             int type = bundle.getInt("type");
-
-            int count = bundle.getInt("count");
+            long vedioSize = bundle.getLong("vedioSize");
+//            int count = bundle.getInt("count");
             int countnumber = bundle.getInt("countnumber");
 
                 if (url != null){
                     String name = url.substring(0,url.indexOf(".mp")+4);
                     names = name.substring(name.lastIndexOf("/")+1);
                     file = new File(IConstant.STROAGE_PATH+names);
-                    downLoadFile(url,file,count,time,contentId,countnumber,date,type);
+                    downLoadFile(url,file,vedioSize,time,contentId,countnumber,date,type);
                 }
 
         }
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void downLoadFile(String url,File file,int count,String time,String contentId,int cnm,String date,int type) {
+    private void downLoadFile(String url,File file,long vedioSize,String time,String contentId,int cnm,String date,int type) {
 
         httpHandler = httpUtils.download(url, file.getAbsolutePath(), true, false, new RequestCallBack<File>() {
             @Override
             public void onSuccess(ResponseInfo<File> responseInfo) {
                 File result = responseInfo.result;
-                if ((cnm-1) == count){
-                    SpUtils.getInstance().saveLastAynvTime(time);
-                    Log.e("------------downfileser","同步时间保存了");
-                }
-                if (noteService.isExist(result.getName())){
-                    Note ci =new Note();
-                    ci.setName(result.getName());
-                    ci.setState(true);
-                    ci.setPath(file.getAbsolutePath());
-                    ci.setUrl(url);
-                    ci.setType(type);
-                    ci.setDate(date);
-                    ci.setContentid(contentId);
-                    noteService.updateData(result.getName(),ci);
-                    Log.e("------------downfileser","数据库操作完成");
+                long l = file.length(); //下载文件的大小
+                long l1 = availableSize();//手机内存大小
+                Log.e("----daxiao","网络文件大小 ："+vedioSize+"--------下载文件大小 :"+l+"-----------手机内存大小 :"+l1);
+                if (vedioSize> l || l1<l){
+                    Log.e("------------downfileser","文件下载异常");
+                    result.delete();
                 }else{
-                    Note ci =new Note();
-                    ci.setName(result.getName());
-                    ci.setState(true);
-                    ci.setPath(file.getAbsolutePath());
-                    ci.setUrl(url);
-                    ci.setType(type);
-                    ci.setDate(date);
-                    ci.setContentid(contentId);
-                    noteService.insertNote(ci);
+                    conpletenumber+=1;
+                    Log.e("----下载完成数量",conpletenumber+"个");
+                    if (conpletenumber == cnm){
+                        SpUtils.getInstance().saveLastAynvTime(time);
+                        Log.e("------------downfileser","同步时间保存了");
+                    }
+                    if (noteService.isExist(result.getName())){
+                        Note ci =new Note();
+                        ci.setName(result.getName());
+                        ci.setState(true);
+                        ci.setPath(file.getAbsolutePath());
+                        ci.setUrl(url);
+                        ci.setType(type);
+                        ci.setDate(date);
+                        ci.setVodeosize(vedioSize);
+                        ci.setContentid(contentId);
+                        noteService.updateData(result.getName(),ci);
+                        Log.e("------------downfileser","数据库操作完成");
+                    }else{
+                        Note ci =new Note();
+                        ci.setName(result.getName());
+                        ci.setState(true);
+                        ci.setPath(file.getAbsolutePath());
+                        ci.setUrl(url);
+                        ci.setType(type);
+                        ci.setDate(date);
+                        ci.setVodeosize(vedioSize);
+                        ci.setContentid(contentId);
+                        noteService.insertNote(ci);
+                    }
                 }
 
                 stopSelf();
@@ -159,4 +174,47 @@ public class DownFileService extends Service {
     public static HttpHandler<File> getHandler(){
         return httpHandler;
     }
+    private long length;
+    public long downloadFileSize(final String path) {
+        new Thread() {
+            public void run() {
+                try {
+                    URL url = new URL(path);     //创建url对象
+                    HttpURLConnection conn = (HttpURLConnection) url
+                            .openConnection();     //建立连接
+                    conn.setRequestMethod("GET");    //设置请求方法
+                    conn.setReadTimeout(5000);       //设置响应超时时间
+                    conn.setConnectTimeout(5000);   //设置连接超时时间
+                    conn.connect();   //发送请求
+                    int responseCode = conn.getResponseCode();    //获取响应码
+                    if (responseCode == 200) {   //响应码是200(固定值)就是连接成功，否者就连接失败
+                        length = conn.getContentLength();    //获取文件的大小
+                    } else {
+
+                    }
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            };
+        }.start();
+        return length;
+    }
+    /**
+     * 获取手机剩余内存大小
+     *
+     * @return 手机剩余内存(单位：byte)
+     */
+    public static long availableSize() {
+        // 取得SD卡文件路径
+        File file = Environment.getExternalStorageDirectory();
+        StatFs fs = new StatFs(file.getPath());
+        // 获取单个数据块的大小(Byte)
+        int blockSize = fs.getBlockSize();
+        // 空闲的数据块的数量
+        long availableBlocks = fs.getAvailableBlocks();
+        return blockSize * availableBlocks;
+    }
+
 }

@@ -112,7 +112,7 @@ public class QueryPrescriptionPresenter {
                     @Override
                     public void run() {
 //                        String s  = user.toString();
-//                        Log.e("----------------user",user.getData().getVideoupdateAt());
+//                        Log.e("----------------user",user.getData().getExt().getVideosize()+"");
                         queryPrescription.update(user,is);
                     }
                 });

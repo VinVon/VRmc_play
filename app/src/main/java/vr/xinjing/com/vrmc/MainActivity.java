@@ -345,6 +345,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                         ci.setUrl(newList.get(i).getData().getExt().getContent());
                                         ci.setContentid(newList.get(i).getData().getId());
                                         ci.setDate(newList.get(i).getData().getVideoupdateAt());
+                                        ci.setVodeosize(newList.get(i).getData().getExt().getVideosize());
                                         noteService.updateData(FileName, ci);
                                         ayncPath.remove(newList.get(i));
                                     }
@@ -358,6 +359,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                     ci.setUrl(newList.get(i).getData().getExt().getContent());
                                     ci.setContentid(newList.get(i).getData().getId());
                                     ci.setDate(newList.get(i).getData().getVideoupdateAt());
+                                    ci.setVodeosize(newList.get(i).getData().getExt().getVideosize());
                                     noteService.updateData(FileName, ci);
                                     ayncPath.remove(newList.get(i));
                                 }
@@ -370,22 +372,25 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                 n.setUrl(newList.get(i).getData().getExt().getContent());
                                 n.setContentid(newList.get(i).getData().getId());
                                 n.setDate(newList.get(i).getData().getVideoupdateAt());
+                                n.setVodeosize(newList.get(i).getData().getExt().getVideosize());
                                 noteService.insertNote(n);
                             }
                         }
                     }
                     HttpHandler<File> handler = DownFileService.getHandler();
+                    all = noteService.getAll();//获得数据库所有文件的记录,来校验新获得的文件
                     for (int i = 0; i < all.size(); i++) {
                         if (handler == null) {
 //                         if (handler.getRequestCallBack().getRequestUrl() == all.get(i).getUrl() && handler.isCancelled()){//获得数据库中没有进行的任务线程
                             if (!all.get(i).getState()) {//文件没有下载完成
                                 PrescriptionInfo pp = new PrescriptionInfo();
-                                PrescriptionInfo.DataEntity ppb = new PrescriptionInfo.DataEntity();
-                                PrescriptionInfo.DataEntity.ExtEntity ppe = new PrescriptionInfo.DataEntity.ExtEntity();
+                                PrescriptionInfo.DataBean ppb = new PrescriptionInfo.DataBean();
+                                PrescriptionInfo.DataBean.ExtBean ppe = new PrescriptionInfo.DataBean.ExtBean();
                                 ppb.setType(all.get(i).getType());
                                 ppb.setVideoupdateAt(all.get(i).getDate());
                                 ppb.setId(all.get(i).getContentid());
                                 ppe.setContent(all.get(i).getUrl());
+                                ppe.setVideosize(all.get(i).getVodeosize());
                                 ppb.setExt(ppe);
                                 pp.setData(ppb);
                                 ayncPath.add(pp);
@@ -395,12 +400,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             if (handler.isCancelled()) {//获得数据库中没有进行的任务线程
                                 if (!all.get(i).getState()) {//文件没有下载完成
                                     PrescriptionInfo pp = new PrescriptionInfo();
-                                    PrescriptionInfo.DataEntity ppb = new PrescriptionInfo.DataEntity();
-                                    PrescriptionInfo.DataEntity.ExtEntity ppe = new PrescriptionInfo.DataEntity.ExtEntity();
+                                    PrescriptionInfo.DataBean ppb = new PrescriptionInfo.DataBean();
+                                    PrescriptionInfo.DataBean.ExtBean ppe = new PrescriptionInfo.DataBean.ExtBean();
                                     ppb.setType(all.get(i).getType());
                                     ppb.setVideoupdateAt(all.get(i).getDate());
                                     ppb.setId(all.get(i).getContentid());
                                     ppe.setContent(all.get(i).getUrl());
+                                    ppe.setVideosize(all.get(i).getVodeosize());
                                     ppb.setExt(ppe);
                                     pp.setData(ppb);
                                     ayncPath.add(pp);
@@ -420,22 +426,24 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                         if (i == ayncPath.size() - 1) {
                             SYNintent = new Intent(MainActivity.this, DownFileService.class);
                             SYNintent.putExtra("downloadUrl", ayncPath.get(i).getData().getExt().getContent());
-                            SYNintent.putExtra("count", i);
+//                            SYNintent.putExtra("count", i);
                             SYNintent.putExtra("countnumber", ayncPath.size());
                             SYNintent.putExtra("Aynctime", NowAyncTime);
                             SYNintent.putExtra("date", ayncPath.get(i).getData().getVideoupdateAt());
                             SYNintent.putExtra("type", ayncPath.get(i).getData().getType());
+                            SYNintent.putExtra("vedioSize", ayncPath.get(i).getData().getExt().getVideosize());
                             SYNintent.putExtra("ContentId", ayncPath.get(i).getData().getId());
                             Log.e("-------rengzai", ayncPath.get(i).getData().getVideoupdateAt());
                             startService(SYNintent);
                         } else {
                             SYNintent = new Intent(MainActivity.this, DownFileService.class);
                             SYNintent.putExtra("downloadUrl", ayncPath.get(i).getData().getExt().getContent());
-                            SYNintent.putExtra("count", i);
+//                            SYNintent.putExtra("count", i);
                             SYNintent.putExtra("countnumber", ayncPath.size());
                             SYNintent.putExtra("Aynctime", NowAyncTime);
                             SYNintent.putExtra("date", ayncPath.get(i).getData().getVideoupdateAt());
                             SYNintent.putExtra("type", ayncPath.get(i).getData().getType());
+                            SYNintent.putExtra("vedioSize", ayncPath.get(i).getData().getExt().getVideosize());
                             SYNintent.putExtra("ContentId", ayncPath.get(i).getData().getId());
                             Log.e("-------rengzai", ayncPath.get(i).getData().getVideoupdateAt());
                             startService(SYNintent);
@@ -687,16 +695,17 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                         if (!all.get(i).getState()) {
                             Log.e("--------------", "网络启动下载");
                             SYNintent = new Intent(MainActivity.this, DownFileService.class);
-                            if (i == all.size() - 1) {
-                                SYNintent.putExtra("count", i);
-                            } else {
-                                SYNintent.putExtra("count", -1);
-                            }
+//                            if (i == all.size() - 1) {
+//                                SYNintent.putExtra("count", i);
+//                            } else {
+//                                SYNintent.putExtra("count", -1);
+//                            }
                             SYNintent.putExtra("countnumber", all.size());
                             SYNintent.putExtra("Aynctime", NowAyncTime);
                             SYNintent.putExtra("date", all.get(i).getDate());
                             SYNintent.putExtra("downloadUrl", all.get(i).getUrl());
                             SYNintent.putExtra("type", all.get(i).getType());
+                            SYNintent.putExtra("vedioSize", all.get(i).getVodeosize());
                             SYNintent.putExtra("ContentId", all.get(i).getContentid());
                             startService(SYNintent);
 

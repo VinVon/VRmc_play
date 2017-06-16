@@ -48,5 +48,7 @@ public class VedioDao {
         note.addStringProperty("contentid");
         note.addStringProperty("date");
         note.addIntProperty("type");
+        note.addLongProperty("vodeosize");
+
     }
 }

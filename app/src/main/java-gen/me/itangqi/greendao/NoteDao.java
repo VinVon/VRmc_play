@@ -31,6 +31,7 @@ public class NoteDao extends AbstractDao<Note, Long> {
         public final static Property Contentid = new Property(5, String.class, "contentid", false, "CONTENTID");
         public final static Property Date = new Property(6, String.class, "date", false, "DATE");
         public final static Property Type = new Property(7, Integer.class, "type", false, "TYPE");
+        public final static Property Vodeosize = new Property(8, Long.class, "vodeosize", false, "VODEOSIZE");
     };
 
 
@@ -53,7 +54,8 @@ public class NoteDao extends AbstractDao<Note, Long> {
                 "'URL' TEXT," + // 4: url
                 "'CONTENTID' TEXT," + // 5: contentid
                 "'DATE' TEXT," + // 6: date
-                "'TYPE' INTEGER);"); // 7: type
+                "'TYPE' INTEGER," + // 7: type
+                "'VODEOSIZE' INTEGER);"); // 8: vodeosize
     }
 
     /** Drops the underlying database table. */
@@ -102,6 +104,11 @@ public class NoteDao extends AbstractDao<Note, Long> {
         if (type != null) {
             stmt.bindLong(8, type);
         }
+ 
+        Long vodeosize = entity.getVodeosize();
+        if (vodeosize != null) {
+            stmt.bindLong(9, vodeosize);
+        }
     }
 
     /** @inheritdoc */
@@ -121,7 +128,8 @@ public class NoteDao extends AbstractDao<Note, Long> {
             cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // url
             cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5), // contentid
             cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6), // date
-            cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7) // type
+            cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7), // type
+            cursor.isNull(offset + 8) ? null : cursor.getLong(offset + 8) // vodeosize
         );
         return entity;
     }
@@ -137,6 +145,7 @@ public class NoteDao extends AbstractDao<Note, Long> {
         entity.setContentid(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
         entity.setDate(cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6));
         entity.setType(cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7));
+        entity.setVodeosize(cursor.isNull(offset + 8) ? null : cursor.getLong(offset + 8));
      }
     
     /** @inheritdoc */

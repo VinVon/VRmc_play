@@ -15,6 +15,7 @@ public class Note {
     private String contentid;
     private String date;
     private Integer type;
+    private Long vodeosize;
 
     public Note() {
     }
@@ -23,7 +24,7 @@ public class Note {
         this.id = id;
     }
 
-    public Note(Long id, String name, String path, Boolean state, String url, String contentid, String date, Integer type) {
+    public Note(Long id, String name, String path, Boolean state, String url, String contentid, String date, Integer type, Long vodeosize) {
         this.id = id;
         this.name = name;
         this.path = path;
@@ -32,6 +33,7 @@ public class Note {
         this.contentid = contentid;
         this.date = date;
         this.type = type;
+        this.vodeosize = vodeosize;
     }
 
     public Long getId() {
@@ -98,6 +100,14 @@ public class Note {
 
     public void setType(Integer type) {
         this.type = type;
+    }
+
+    public Long getVodeosize() {
+        return vodeosize;
+    }
+
+    public void setVodeosize(Long vodeosize) {
+        this.vodeosize = vodeosize;
     }
 
 }
