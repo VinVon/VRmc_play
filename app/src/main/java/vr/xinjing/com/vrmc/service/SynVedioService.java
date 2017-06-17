@@ -64,6 +64,7 @@ public class SynVedioService extends Service implements TaskListimp{
     private ActivityManager manager;
     private TaskInfo taskInfo;
     private boolean tokenChange = false;
+    private MyTimerTask myTimerTask;
     @Override
     public void onCreate() {
 //        IntentFilter mFilter = new IntentFilter();
@@ -83,7 +84,14 @@ public class SynVedioService extends Service implements TaskListimp{
         Bundle extras = intent.getExtras();
         users = (LocalInfo) extras.getSerializable("user");
         Log.e("---service",users.getPassword()+" == "+users.getUsername());
-        timer.schedule(timerTask, 0, 5000);
+//        timer.schedule(timerTask, 0, );
+            if (timer != null){
+                if (myTimerTask != null){
+                    myTimerTask.cancel();  //将原任务从队列中移除
+                }
+                myTimerTask = new MyTimerTask();
+                timer.schedule(myTimerTask, 0, 5000);
+            }
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -113,8 +121,7 @@ public class SynVedioService extends Service implements TaskListimp{
         }
     };
     // 计时器
-    TimerTask
-            timerTask = new TimerTask() {
+    class MyTimerTask extends TimerTask {
         @Override
         public void run() {
             Map<String, String> ayncmap = new HashMap<>();

@@ -22,6 +22,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.lidroid.xutils.http.HttpHandler;
+import com.lidroid.xutils.task.Priority;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -141,10 +142,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             if (timerTask != null){
                 timerTask.cancel();  //将原任务从队列中移除
             }
+            timerTask = new MyTimerTask();
+            mTimer.schedule(new MyTimerTask(), 0, 1000*60*60*24);
         }
-        timerTask = new MyTimerTask();
-        mTimer.schedule(timerTask, 0, 1000 * 60* 60 * 24);//
-
 
         //注册
         receiver = new MyReceiver();
@@ -393,7 +393,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                     all = noteService.getAll();//获得数据库所有文件的记录,来校验新获得的文件
                     for (int i = 0; i < all.size(); i++) {
                         if (handler == null) {
-                            Log.e("----handler==null","没有下载handler");
+                            Log.e("----handler==null","没有下载handler"+handler.getRequestCallBack().getRequestUrl());
 //                         if (handler.getRequestCallBack().getRequestUrl() == all.get(i).getUrl() && handler.isCancelled()){//获得数据库中没有进行的任务线程
                             if (!all.get(i).getState()) {//文件没有下载完成
                                 PrescriptionInfo pp = new PrescriptionInfo();
@@ -410,7 +410,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             }
 //                         }
                         } else {
-                            Log.e("----handler!=null","有下载handler");
+                            Log.e("----handler!=null","有下载handler"+handler.getRequestCallBack().getRequestUrl());
                             if (handler.isCancelled()) {//获得数据库中没有进行的任务线程
                                 Log.e("----handler=isCancelled","handler被取消了");
                                 if (!all.get(i).getState()) {//文件没有下载完成
