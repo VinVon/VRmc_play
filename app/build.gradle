@@ -14,7 +14,7 @@ android {
         versionCode 1
         versionName "1.0.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-//        resValue "string", "tray__authority", "${applicationId}.tray"
+        resValue "string", "tray__authority", "vr.xinjing.com.vrmc.tray"
     }
     task nativeLibsToJar(type: Zip, description: "create a jar archive of the native libs") {
         destinationDir file("$projectDir/libs")

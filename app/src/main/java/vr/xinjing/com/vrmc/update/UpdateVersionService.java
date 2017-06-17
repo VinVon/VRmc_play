@@ -39,6 +39,7 @@ import okhttp3.Call;
 import okhttp3.Request;
 import vr.xinjing.com.vrmc.R;
 import vr.xinjing.com.vrmc.model.DownFileModel;
+import vr.xinjing.com.vrmc.utils.ToastCommom;
 import vr.xinjing.com.vrmc.utils.UpdateVersionUtil;
 
 public class UpdateVersionService extends Service {
@@ -59,7 +60,7 @@ public class UpdateVersionService extends Service {
     public void onCreate() {
         super.onCreate();
 
-//        httpUtils = new HttpUtils();
+        httpUtils = new HttpUtils();
         updateFile = new File(SDCardUtils.getRootDirectory()+"/updateVersion/gdmsaec-app.apk");
 
         nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -81,8 +82,8 @@ public class UpdateVersionService extends Service {
         PreferenceUtils.setString(UpdateVersionService.this, "apkDownloadurl", downUrl);
         nm.notify(titleId, notification);
         Log.e("----apk","开始下载apk");
-//        downLoadFile(downUrl);
-        new downloadApkThread().start();
+        downLoadFile(downUrl);
+//        new downloadApkThread().start();
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -238,26 +239,38 @@ public class UpdateVersionService extends Service {
                     byte buf[] = new byte[1024];
                     int numread = 0 ;
                     // 写入到文件中
-                    do
-                    {
-                         numread = is.read(buf);
+                    while((numread = is.read(buf))!=-1){
                         count += numread;
                         // 计算进度条位置
                         progress = (int) (((float) count / length) * 100);
                         Log.e("---progress",progress+"%"+numread);
                         // 更新进度
                         mHandler.sendEmptyMessage(DOWNLOAD);
-                        if (numread <= 0)
-                        {
-                            // 下载完成
-                            mHandler.sendEmptyMessage(DOWNLOAD_FINISH);
-                            break;
-                        }
                         // 写入文件
                         fos.write(buf, 0, numread);
-                    } while (numread != -1);// 点击取消就停止下载.
+                    }
                     fos.close();
                     is.close();
+                    mHandler.sendEmptyMessage(DOWNLOAD_FINISH);
+//                    do
+//                    {
+//                         numread = is.read(buf);
+//                        count += numread;
+//                        // 计算进度条位置
+//                        progress = (int) (((float) count / length) * 100);
+//                        Log.e("---progress",progress+"%"+numread);
+//                        // 更新进度
+//                        mHandler.sendEmptyMessage(DOWNLOAD);
+//                        if (numread <= 0)
+//                        {
+//                            // 下载完成
+//                            mHandler.sendEmptyMessage(DOWNLOAD_FINISH);
+//                            break;
+//                        }
+//                        // 写入文件
+//                        fos.write(buf, 0, numread);
+//                    } while (numread != -1);// 点击取消就停止下载.
+
                 }
             } catch (MalformedURLException e)
             {
@@ -285,6 +298,7 @@ public class UpdateVersionService extends Service {
                     nm.notify(0, notification);
                     break;
                 case DOWNLOAD_FINISH:
+                    ToastCommom.createInstance().ToastShow(UpdateVersionService.this,"anzhuang");
                     // 更改文字
                     notification.contentView.setTextViewText(R.id.msg, "下载完成!点击安装");
 

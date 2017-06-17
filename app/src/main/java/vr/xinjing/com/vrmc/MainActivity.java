@@ -385,6 +385,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                 n.setDate(newList.get(i).getData().getVideoupdateAt());
                                 n.setVodeosize(newList.get(i).getData().getExt().getVideosize());
                                 noteService.insertNote(n);
+                                ayncPath.remove(newList.get(i));
                             }
                         }
                     }
