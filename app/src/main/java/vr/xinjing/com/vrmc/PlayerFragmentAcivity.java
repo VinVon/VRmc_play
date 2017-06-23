@@ -12,6 +12,8 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
+import com.demo.hotrepair.entryptlibrary.EncryptClick;
+import com.demo.hotrepair.entryptlibrary.EncryptFile;
 import com.utovr.player.UVMediaPlayer;
 import com.utovr.player.UVMediaType;
 
@@ -25,7 +27,7 @@ import vr.xinjing.com.vrmc.utils.NoteService;
  * Created by raytine on 2017/2/11.
  */
 
-public class PlayerFragmentAcivity extends FragmentActivity {
+public class PlayerFragmentAcivity extends FragmentActivity implements EncryptClick{
     private PowerManager.WakeLock mWakeLock = null;
     private PlayerFragment mPlayerFragment;
     private MusicFragment musicFragment;
@@ -34,6 +36,10 @@ public class PlayerFragmentAcivity extends FragmentActivity {
     private TaskInfo.DataBean dataBean;
     private MyReceiver receiver;
     private NoteService noteService;//数据库操作类
+    private EncryptFile encryptFile;
+    private Note n;
+    private int password;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState)
     {
@@ -45,6 +51,7 @@ public class PlayerFragmentAcivity extends FragmentActivity {
         mWakeLock.acquire();
         receiver = new MyReceiver();
         noteService = ((Appaplication) getApplication()).noteService;//数据库操作类
+        encryptFile = new EncryptFile(this);
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.intent.action.MY_RECEIVERS");
         //注册
@@ -66,11 +73,21 @@ public class PlayerFragmentAcivity extends FragmentActivity {
 
     }
     public  boolean VrVideoIsPlaying(){
-       return mPlayerFragment.getmMediaplayer().isPlaying();
+        return mPlayerFragment.getmMediaplayer().isPlaying();
     }
+
+    @Override
+    protected void onPause() {
+        Log.e("-----activity","onPause");
+        EventBus.getDefault().post("back");
+        super.onPause();
+
+    }
+
     @Override
     protected void onDestroy()
     {
+        Log.e("-----activity","dasda");
         super.onDestroy();
         mWakeLock.release();
         unregisterReceiver(receiver);
@@ -85,6 +102,7 @@ public class PlayerFragmentAcivity extends FragmentActivity {
     public boolean onKeyUp(int keyCode, KeyEvent event) {
 
         if (keyCode == KeyEvent.KEYCODE_BACK) {
+            Log.e("-------path","KEYCODE_BACK");
             if (mPlayerFragment != null) {
                 mPlayerFragment.releasePlayer();
                 finish();
@@ -93,6 +111,17 @@ public class PlayerFragmentAcivity extends FragmentActivity {
         }
         return super.onKeyUp(keyCode, event);
     }
+
+    @Override
+    public void encrySuccess() {
+
+    }
+
+    @Override
+    public void encryFailed() {
+
+    }
+
     /**
      * 广播接收器
      * @author user
@@ -103,30 +132,33 @@ public class PlayerFragmentAcivity extends FragmentActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Bundle extras = intent.getExtras();
-              dataBean = (TaskInfo.DataBean) extras.getSerializable("task");
-                if (dataBean.getType() == 2){
-                    if (mPlayerFragment.getmMediaplayer().isPlaying()){
-                        Log.e("----palyactivity","停止");
+            dataBean = (TaskInfo.DataBean) extras.getSerializable("task");
+            n = noteService.getNameById(dataBean.getContent()+"");
+            Log.e("-------path",n.getPath()+"");
+            password =  dataBean.getVoidpassword();
+            if (dataBean.getType() == 2){
+                if (mPlayerFragment.getmMediaplayer().isPlaying()){
+                    Log.e("----palyactivity","停止");
 //                        mPlayerFragment.showDialog();
+//                    encryptFile.EncryFile(n.getPath(),password);
+                    finish();
+                    EventBus.getDefault().post("dsa");
+                }
+                else
+                {
+                    Log.e("----palyactivity","播放类型");
+                }
+            }else{
+                UVMediaPlayer uvMediaPlayer = mPlayerFragment.getmMediaplayer();
+                if (uvMediaPlayer.isPlaying()){
+                    if (n == null || !n.getState()){
                         finish();
-                        EventBus.getDefault().post("dsa");
-                    }
-                    else
-                    {
-                        Log.e("----palyactivity","播放类型");
-                    }
-                }else{
-                    UVMediaPlayer uvMediaPlayer = mPlayerFragment.getmMediaplayer();
-                    if (uvMediaPlayer.isPlaying()){
-                        Note n = noteService.getNameById(dataBean.getContent());
-                        if (n == null || !n.getState()){
-                            finish();
-                            MyToast.makeText(getApplicationContext(),"资源同步中",Toast.LENGTH_SHORT).show();
-                        }else{
+                        MyToast.makeText(getApplicationContext(),"资源同步中",Toast.LENGTH_SHORT).show();
+                    }else{
                         uvMediaPlayer.reset();
                         uvMediaPlayer.setSource(UVMediaType.UVMEDIA_TYPE_MP4, n.getPath());}
-                    }
                 }
+            }
         }
     }
 }

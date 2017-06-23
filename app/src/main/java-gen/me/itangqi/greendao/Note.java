@@ -11,6 +11,7 @@ public class Note {
     private String name;
     private String path;
     private Boolean state;
+    private Boolean issecret;
     private String url;
     private String contentid;
     private String date;
@@ -24,11 +25,12 @@ public class Note {
         this.id = id;
     }
 
-    public Note(Long id, String name, String path, Boolean state, String url, String contentid, String date, Integer type, Long vodeosize) {
+    public Note(Long id, String name, String path, Boolean state, Boolean issecret, String url, String contentid, String date, Integer type, Long vodeosize) {
         this.id = id;
         this.name = name;
         this.path = path;
         this.state = state;
+        this.issecret = issecret;
         this.url = url;
         this.contentid = contentid;
         this.date = date;
@@ -68,6 +70,14 @@ public class Note {
 
     public void setState(Boolean state) {
         this.state = state;
+    }
+
+    public Boolean getIssecret() {
+        return issecret;
+    }
+
+    public void setIssecret(Boolean issecret) {
+        this.issecret = issecret;
     }
 
     public String getUrl() {

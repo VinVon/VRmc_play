@@ -4,7 +4,7 @@ import de.greenrobot.daogenerator.Entity;
 import de.greenrobot.daogenerator.Schema;
 
 public class VedioDao {
-    private static int dbVersion = 1;
+    private static int dbVersion = 2;
     public static void main(String[] args) throws Exception {
 
         // 正如你所见的，你创建了一个用于添加实体（Entity）的模式（Schema）对象。
@@ -44,6 +44,7 @@ public class VedioDao {
         // For example, a property called “creationDate” will become a database column “CREATION_DATE”.
         note.addStringProperty("path");
         note.addBooleanProperty("state");
+        note.addBooleanProperty("issecret");
         note.addStringProperty("url");
         note.addStringProperty("contentid");
         note.addStringProperty("date");

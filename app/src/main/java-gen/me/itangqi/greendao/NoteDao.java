@@ -27,11 +27,12 @@ public class NoteDao extends AbstractDao<Note, Long> {
         public final static Property Name = new Property(1, String.class, "name", false, "NAME");
         public final static Property Path = new Property(2, String.class, "path", false, "PATH");
         public final static Property State = new Property(3, Boolean.class, "state", false, "STATE");
-        public final static Property Url = new Property(4, String.class, "url", false, "URL");
-        public final static Property Contentid = new Property(5, String.class, "contentid", false, "CONTENTID");
-        public final static Property Date = new Property(6, String.class, "date", false, "DATE");
-        public final static Property Type = new Property(7, Integer.class, "type", false, "TYPE");
-        public final static Property Vodeosize = new Property(8, Long.class, "vodeosize", false, "VODEOSIZE");
+        public final static Property Issecret = new Property(4, Boolean.class, "issecret", false, "ISSECRET");
+        public final static Property Url = new Property(5, String.class, "url", false, "URL");
+        public final static Property Contentid = new Property(6, String.class, "contentid", false, "CONTENTID");
+        public final static Property Date = new Property(7, String.class, "date", false, "DATE");
+        public final static Property Type = new Property(8, Integer.class, "type", false, "TYPE");
+        public final static Property Vodeosize = new Property(9, Long.class, "vodeosize", false, "VODEOSIZE");
     };
 
 
@@ -51,11 +52,12 @@ public class NoteDao extends AbstractDao<Note, Long> {
                 "'NAME' TEXT NOT NULL ," + // 1: name
                 "'PATH' TEXT," + // 2: path
                 "'STATE' INTEGER," + // 3: state
-                "'URL' TEXT," + // 4: url
-                "'CONTENTID' TEXT," + // 5: contentid
-                "'DATE' TEXT," + // 6: date
-                "'TYPE' INTEGER," + // 7: type
-                "'VODEOSIZE' INTEGER);"); // 8: vodeosize
+                "'ISSECRET' INTEGER," + // 4: issecret
+                "'URL' TEXT," + // 5: url
+                "'CONTENTID' TEXT," + // 6: contentid
+                "'DATE' TEXT," + // 7: date
+                "'TYPE' INTEGER," + // 8: type
+                "'VODEOSIZE' INTEGER);"); // 9: vodeosize
     }
 
     /** Drops the underlying database table. */
@@ -85,29 +87,34 @@ public class NoteDao extends AbstractDao<Note, Long> {
             stmt.bindLong(4, state ? 1l: 0l);
         }
  
+        Boolean issecret = entity.getIssecret();
+        if (issecret != null) {
+            stmt.bindLong(5, issecret ? 1l: 0l);
+        }
+ 
         String url = entity.getUrl();
         if (url != null) {
-            stmt.bindString(5, url);
+            stmt.bindString(6, url);
         }
  
         String contentid = entity.getContentid();
         if (contentid != null) {
-            stmt.bindString(6, contentid);
+            stmt.bindString(7, contentid);
         }
  
         String date = entity.getDate();
         if (date != null) {
-            stmt.bindString(7, date);
+            stmt.bindString(8, date);
         }
  
         Integer type = entity.getType();
         if (type != null) {
-            stmt.bindLong(8, type);
+            stmt.bindLong(9, type);
         }
  
         Long vodeosize = entity.getVodeosize();
         if (vodeosize != null) {
-            stmt.bindLong(9, vodeosize);
+            stmt.bindLong(10, vodeosize);
         }
     }
 
@@ -125,11 +132,12 @@ public class NoteDao extends AbstractDao<Note, Long> {
             cursor.getString(offset + 1), // name
             cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // path
             cursor.isNull(offset + 3) ? null : cursor.getShort(offset + 3) != 0, // state
-            cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // url
-            cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5), // contentid
-            cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6), // date
-            cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7), // type
-            cursor.isNull(offset + 8) ? null : cursor.getLong(offset + 8) // vodeosize
+            cursor.isNull(offset + 4) ? null : cursor.getShort(offset + 4) != 0, // issecret
+            cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5), // url
+            cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6), // contentid
+            cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7), // date
+            cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8), // type
+            cursor.isNull(offset + 9) ? null : cursor.getLong(offset + 9) // vodeosize
         );
         return entity;
     }
@@ -141,11 +149,12 @@ public class NoteDao extends AbstractDao<Note, Long> {
         entity.setName(cursor.getString(offset + 1));
         entity.setPath(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
         entity.setState(cursor.isNull(offset + 3) ? null : cursor.getShort(offset + 3) != 0);
-        entity.setUrl(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
-        entity.setContentid(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
-        entity.setDate(cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6));
-        entity.setType(cursor.isNull(offset + 7) ? null : cursor.getInt(offset + 7));
-        entity.setVodeosize(cursor.isNull(offset + 8) ? null : cursor.getLong(offset + 8));
+        entity.setIssecret(cursor.isNull(offset + 4) ? null : cursor.getShort(offset + 4) != 0);
+        entity.setUrl(cursor.isNull(offset + 5) ? null : cursor.getString(offset + 5));
+        entity.setContentid(cursor.isNull(offset + 6) ? null : cursor.getString(offset + 6));
+        entity.setDate(cursor.isNull(offset + 7) ? null : cursor.getString(offset + 7));
+        entity.setType(cursor.isNull(offset + 8) ? null : cursor.getInt(offset + 8));
+        entity.setVodeosize(cursor.isNull(offset + 9) ? null : cursor.getLong(offset + 9));
      }
     
     /** @inheritdoc */

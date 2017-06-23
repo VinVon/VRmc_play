@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -21,6 +22,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.demo.hotrepair.entryptlibrary.EncryptClick;
+import com.demo.hotrepair.entryptlibrary.EncryptFile;
 import com.lidroid.xutils.http.HttpHandler;
 import com.lidroid.xutils.task.Priority;
 
@@ -65,7 +68,7 @@ import vr.xinjing.com.vrmc.utils.SpUtils;
 import vr.xinjing.com.vrmc.utils.ToastCommom;
 import vr.xinjing.com.vrmc.utils.UpdateVersionUtil;
 
-public class MainActivity extends BaseActivity implements View.OnClickListener, QueryPrescription, AyncTime, TaskListimp {
+public class MainActivity extends BaseActivity implements View.OnClickListener, QueryPrescription, AyncTime, EncryptClick {
 
     @BindView(R.id.app_name)
     TextView appName;
@@ -95,6 +98,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     private NoteService noteService;//数据库操作类
     private MyReceiver receiver; //定义接收指令的广播
     private MyTimerTask timerTask;
+    private EncryptFile encryptFile;
     private Handler mHandler = new Handler() {
 
         @Override
@@ -105,6 +109,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         }
 
     };
+
+
 
     @Override
     protected void onResume() {
@@ -124,26 +130,27 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);//设置成全屏模式
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);//强制为横屏
         getData();
+        encryptFile = new EncryptFile(MainActivity.this);//初始化加密解密类
         noteService = ((Appaplication) getApplication()).noteService;//数据库操作类
-//        List<Note> all = noteService.getAll();
-//        for (int i = 0; i <all.size() ; i++) {
-//            Note ci =new Note();
-//            ci.setName(all.get(i).getName());
-//            ci.setState(true);
-//            ci.setPath(all.get(i).getPath());
-//            ci.setUrl(all.get(i).getUrl());
-//            noteService.updateData(all.get(i).getName(),ci);
-//        }
+//
+        List<Note> all = noteService.getAll();
+        for (int i = 0; i <all.size() ; i++) {
+            if (all.get(i).getIssecret() == null){
+            Note ci =all.get(i);
+           ci.setIssecret(true);
+            noteService.updateData(all.get(i).getName(),ci);
+            }
+        }
         queryPrescriptionPresenter = new QueryPrescriptionPresenter(MainActivity.this);
 //        endTaskPresenter = new EndTaskPresenter(MainActivity.this);
         ayncp = new AyncTimePresenter(MainActivity.this);//获取同步内容的present
-        getTaskPresenter = new TasklistPresenter(MainActivity.this);
-        if (mTimer != null){
-            if (timerTask != null){
+//        getTaskPresenter = new TasklistPresenter(MainActivity.this);
+        if (mTimer != null) {
+            if (timerTask != null) {
                 timerTask.cancel();  //将原任务从队列中移除
             }
             timerTask = new MyTimerTask();
-            mTimer.schedule(new MyTimerTask(), 0, 1000*60*60*24);
+            mTimer.schedule(new MyTimerTask(), 0, 1000 * 60 * 60 * 24);
         }
 
         //注册
@@ -311,12 +318,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 //                startActivity(intent);
 
             } else { //需要同步内容详情的接口回调
-                Log.e("----下载time",p.getData().getVideoupdateAt()+"");
+                Log.e("----下载time", p.getData().getVideoupdateAt() + "");
                 ayncPath.add(p);
                 if (ayncPath.size() == needAynvcount) {
                     List<PrescriptionInfo> newLisst = new ArrayList<>();
                     newLisst.addAll(ayncPath);
-                    if (last.size()!=0){
+                    if (last.size() != 0) {
                         last.clear();
                     }
                     needAynvcount = 0;
@@ -340,13 +347,20 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                 if (f.exists()) {
                                     String t1 = newList.get(i).getData().getVideoupdateAt();
                                     String t2 = noteByText.getDate();
-                                    if (newList.get(i).getData().getVideoupdateAt().equals(noteByText.getDate())){//相同视频未更新过
+                                    if (newList.get(i).getData().getVideoupdateAt().equals(noteByText.getDate())) {//相同视频未更新过
 //                                        Note noteByText = noteService.getNoteByText(FileName);
+                                        noteByText.setName(noteByText.getName());
+                                        noteByText.setState(noteByText.getState());
+                                        noteByText.setType(noteByText.getType());
+                                        noteByText.setPath(noteByText.getPath());
+                                        noteByText.setDate(noteByText.getDate());
+                                        noteByText.setVodeosize(noteByText.getVodeosize());
+                                        noteByText.setIssecret(noteByText.getIssecret());
                                         noteByText.setUrl(newList.get(i).getData().getExt().getContent());
                                         noteByText.setContentid(newList.get(i).getData().getId());
                                         noteService.updateData(FileName, noteByText);
                                         ayncPath.remove(newList.get(i));
-                                    }else {//相同视频更新过
+                                    } else {//相同视频更新过
                                         f.delete();
                                         Note ci = new Note();
                                         ci.setName(FileName);
@@ -357,6 +371,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                         ci.setContentid(newList.get(i).getData().getId());
                                         ci.setDate(newList.get(i).getData().getVideoupdateAt());
                                         ci.setVodeosize(newList.get(i).getData().getExt().getVideosize());
+                                        ci.setIssecret(true);
                                         noteService.updateData(FileName, ci);
                                         ayncPath.remove(newList.get(i));
                                     }
@@ -371,6 +386,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                     ci.setContentid(newList.get(i).getData().getId());
                                     ci.setDate(newList.get(i).getData().getVideoupdateAt());
                                     ci.setVodeosize(newList.get(i).getData().getExt().getVideosize());
+                                    ci.setIssecret(true);
                                     noteService.updateData(FileName, ci);
                                     ayncPath.remove(newList.get(i));
                                 }
@@ -384,6 +400,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                 n.setContentid(newList.get(i).getData().getId());
                                 n.setDate(newList.get(i).getData().getVideoupdateAt());
                                 n.setVodeosize(newList.get(i).getData().getExt().getVideosize());
+                                n.setIssecret(true);
                                 noteService.insertNote(n);
                                 ayncPath.remove(newList.get(i));
                             }
@@ -393,7 +410,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                     all = noteService.getAll();//获得数据库所有文件的记录,来校验新获得的文件
                     for (int i = 0; i < all.size(); i++) {
                         if (handler == null) {
-                            Log.e("----handler==null","没有下载handler"+handler.getRequestCallBack().getRequestUrl());
+
 //                         if (handler.getRequestCallBack().getRequestUrl() == all.get(i).getUrl() && handler.isCancelled()){//获得数据库中没有进行的任务线程
                             if (!all.get(i).getState()) {//文件没有下载完成
                                 PrescriptionInfo pp = new PrescriptionInfo();
@@ -410,9 +427,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             }
 //                         }
                         } else {
-                            Log.e("----handler!=null","有下载handler"+handler.getRequestCallBack().getRequestUrl());
+                            Log.e("----handler!=null", "有下载handler" + handler.getRequestCallBack().getRequestUrl());
                             if (handler.isCancelled()) {//获得数据库中没有进行的任务线程
-                                Log.e("----handler=isCancelled","handler被取消了");
+                                Log.e("----handler=isCancelled", "handler被取消了");
                                 if (!all.get(i).getState()) {//文件没有下载完成
                                     PrescriptionInfo pp = new PrescriptionInfo();
                                     PrescriptionInfo.DataBean ppb = new PrescriptionInfo.DataBean();
@@ -427,7 +444,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                     ayncPath.add(pp);
                                 }
                             } else {//该下载任务在下次刷新定时器时还处于执行状态
-                                Log.e("----handler=isCancelled","handler取消了");
+                                Log.e("----handler=isCancelled", "handler取消了" + handler.getRequestCallBack().getRequestUrl());
                                 List<PrescriptionInfo> newLists = new ArrayList<>();
                                 newLists.addAll(ayncPath);
                                 for (int j = 0; j < newLists.size(); j++) {
@@ -508,24 +525,24 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     }
 
 
-    @Override
-    public void gettasksuccess(TaskInfo info) {
-        if (info.getData() == null || info.getData().size() == 0) {
-            Log.e("---------", "没有指令");
-        } else {
-            Log.e("---------", info.getData().get(1).getContent());
-            Map<String, String> priArgs = new HashMap<>();
-            priArgs.put("contentId", info.getData().get(1).getContent());
-            priArgs.put("token", token);
-            queryPrescriptionPresenter.setMap(priArgs);
-            queryPrescriptionPresenter.getPrescriptionlistcontent(true);
-        }
-    }
-
-    @Override
-    public void gettaskfailed(String msh) {
-        Log.e("---------", msh);
-    }
+//    @Override
+//    public void gettasksuccess(TaskInfo info) {
+//        if (info.getData() == null || info.getData().size() == 0) {
+//            Log.e("---------", "没有指令");
+//        } else {
+//            Log.e("---------", info.getData().get(1).getContent()+"");
+//            Map<String, String> priArgs = new HashMap<>();
+//            priArgs.put("contentId", info.getData().get(1).getContent()+"");
+//            priArgs.put("token", token);
+//            queryPrescriptionPresenter.setMap(priArgs);
+//            queryPrescriptionPresenter.getPrescriptionlistcontent(true);
+//        }
+//    }
+//
+//    @Override
+//    public void gettaskfailed(String msh) {
+//        Log.e("---------", msh);
+//    }
 
 
     //token 发生变化时，重新登录获取token
@@ -601,8 +618,18 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         instance.saveUser(info);
     }
 
+    @Override
+    public void encrySuccess() {
+
+    }
+
+    @Override
+    public void encryFailed() {
+
+    }
+
     // 计时器
-    class MyTimerTask extends TimerTask{
+    class MyTimerTask extends TimerTask {
 
         @Override
         public void run() {
@@ -614,11 +641,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             ayncmap.put("token", token);
             ayncmap.put("paging", paging);
             ayncmap.put("lastSyncAt", LastAyncTime);
-            Log.e("---haha",token+"--"+paging+"==="+LastAyncTime);
+            Log.e("---haha", token + "--" + paging + "===" + LastAyncTime);
             ayncp.setMap(ayncmap);
             ayncp.getAync();
         }
-    };
+    }
+
+    ;
     private int needAynvcount = 0;
     private int needAynvcounts = 0;
     private int paging = 1;
@@ -627,7 +656,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     //获取同步内容的回调
     @Override
     public void showsuccess(LastAyncInfo s) {
-        Log.e("---tongbu",s.getData().size()+"个"+ayncPath.size());
+        Log.e("---tongbu", s.getData().size() + "个" + ayncPath.size());
         needAynvcounts = s.getData().size();
         needAynvcount += s.getData().size();
         if (needAynvcounts == 10) {//分页
@@ -646,13 +675,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             for (int j = 0; j < s.getData().size(); j++) {
                 last.add(s.getData().get(j));
             }
-            Log.e("---xiazai",last.size()+"个");
+            Log.e("---xiazai", last.size() + "个");
             //有需要同步的url
             for (int i = 0; i < last.size(); i++) {
                 Map<String, String> priArgs = new HashMap<>();
                 priArgs.put("contentId", last.get(i).getId());
                 priArgs.put("token", token);
-                Log.e("---xiazai",last.get(i).getId()+"id");
+                Log.e("---xiazai", last.get(i).getId() + "id" + last.get(i).getName());
                 int ss = checkNetWork();
                 if (ss == 0) {
                     ToastCommom.createInstance().ToastShow(MainActivity.this, "请设置网络环境");
@@ -773,13 +802,16 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 //                    Log.e("---mAin type =1", dataBean.getContent());
 //                    queryPrescriptionPresenter.setMap(priArgs);
 //                    queryPrescriptionPresenter.getPrescriptionlistcontent(true);
-                    Note n = noteService.getNameById(dataBean.getContent());
+                    Note n = noteService.getNameById(dataBean.getContent() + "");
                     if (n == null || !n.getState()) {
                         MyToast.makeText(getApplicationContext(), "资源同步中", Toast.LENGTH_SHORT).show();
                     } else {
                         Intent intents = new Intent(MainActivity.this, PlayerFragmentAcivity.class);
                         intents.putExtra("url", n.getPath());
+                        encryptFile.EncryFile(n.getPath(), dataBean.getVoidpassword());
                         Log.e("-------------path", n.getPath());
+                        n.setIssecret(false);
+                        noteService.updateData(n.getName(),n);
                         intents.putExtra("type", 1);
                         startActivity(intents);
                     }

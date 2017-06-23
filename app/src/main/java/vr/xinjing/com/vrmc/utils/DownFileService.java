@@ -108,6 +108,7 @@ public class DownFileService extends Service {
                         ci.setDate(date);
                         ci.setVodeosize(vedioSize);
                         ci.setContentid(contentId);
+                        ci.setIssecret(true);
                         noteService.updateData(result.getName(),ci);
                         Log.e("------------downfileser","数据库操作完成");
                     }else{
@@ -120,6 +121,7 @@ public class DownFileService extends Service {
                         ci.setDate(date);
                         ci.setVodeosize(vedioSize);
                         ci.setContentid(contentId);
+                        ci.setIssecret(true);
                         noteService.insertNote(ci);
                     }
                 }

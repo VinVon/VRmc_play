@@ -15,6 +15,9 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.demo.hotrepair.entryptlibrary.EncryptClick;
+import com.demo.hotrepair.entryptlibrary.EncryptFile;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +28,7 @@ import de.greenrobot.event.EventBus;
 import de.greenrobot.event.Subscribe;
 import de.greenrobot.event.ThreadMode;
 import me.itangqi.greendao.Note;
+import vr.xinjing.com.vrmc.Appaplication;
 import vr.xinjing.com.vrmc.AuthorizationActivity;
 import vr.xinjing.com.vrmc.MainActivity;
 import vr.xinjing.com.vrmc.PlayerFragmentAcivity;
@@ -44,6 +48,7 @@ import vr.xinjing.com.vrmc.presenter.LoginPresenter;
 import vr.xinjing.com.vrmc.presenter.QueryPrescriptionPresenter;
 import vr.xinjing.com.vrmc.presenter.TasklistPresenter;
 import vr.xinjing.com.vrmc.utils.MyToast;
+import vr.xinjing.com.vrmc.utils.NoteService;
 import vr.xinjing.com.vrmc.utils.SpUtils;
 import vr.xinjing.com.vrmc.utils.ToastCommom;
 
@@ -52,7 +57,7 @@ import vr.xinjing.com.vrmc.utils.ToastCommom;
  * Created by raytine on 2017/3/2.
  */
 
-public class SynVedioService extends Service implements TaskListimp{
+public class SynVedioService extends Service implements TaskListimp,EncryptClick{
     private Timer timer = new Timer();;//每过一个小时，刷新服务器视频内容列表
     private String token;
     private ConnectivityManager connectivityManager;
@@ -65,6 +70,8 @@ public class SynVedioService extends Service implements TaskListimp{
     private TaskInfo taskInfo;
     private boolean tokenChange = false;
     private MyTimerTask myTimerTask;
+    private EncryptFile encryptFile;
+    private NoteService noteService;//数据库操作类
     @Override
     public void onCreate() {
 //        IntentFilter mFilter = new IntentFilter();
@@ -73,6 +80,8 @@ public class SynVedioService extends Service implements TaskListimp{
         getTaskPresenter = new TasklistPresenter(this);
         manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         EventBus.getDefault().register(this);
+        noteService = ((Appaplication) getApplication()).noteService;//数据库操作类
+        encryptFile = new EncryptFile(this);
         super.onCreate();
 
     }
@@ -80,10 +89,10 @@ public class SynVedioService extends Service implements TaskListimp{
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null){
-        token = intent.getStringExtra("token");
-        Bundle extras = intent.getExtras();
-        users = (LocalInfo) extras.getSerializable("user");
-        Log.e("---service",users.getPassword()+" == "+users.getUsername());
+            token = intent.getStringExtra("token");
+            Bundle extras = intent.getExtras();
+            users = (LocalInfo) extras.getSerializable("user");
+            Log.e("---service",users.getPassword()+" == "+users.getUsername());
 //        timer.schedule(timerTask, 0, );
             if (timer != null){
                 if (myTimerTask != null){
@@ -120,6 +129,17 @@ public class SynVedioService extends Service implements TaskListimp{
             }
         }
     };
+
+    @Override
+    public void encrySuccess() {
+
+    }
+
+    @Override
+    public void encryFailed() {
+
+    }
+
     // 计时器
     class MyTimerTask extends TimerTask {
         @Override
@@ -137,13 +157,34 @@ public class SynVedioService extends Service implements TaskListimp{
 
     @Subscribe(threadMode = ThreadMode.BackgroundThread)
     public void helloEventBus(String message){
-        Log.e("----","过来了");
-        if (taskInfo.getData().size()==2){
+
+        if (taskInfo.getData().size()==2&&message.equals("dsa")){
+            Log.e("----","dsa");
             TaskInfo.DataBean dataBean = taskInfo.getData().get(1);
             sendBroadCast(dataBean);
         }
     }
 
+    /**
+     * b播放界面手动退出后，进行加密
+     * @param message
+     */
+    @Subscribe(threadMode = ThreadMode.BackgroundThread)
+    public void backEventBus(String message){
+        if (message.equals("back")){
+
+            for (int i = 0; i <taskInfo.getData().size() ; i++) {
+                if (taskInfo.getData().get(i).getType()==1){
+                    Note nameById = noteService.getNameById(taskInfo.getData().get(i).getContent() + "");
+                    if (!nameById.getIssecret()){
+                    encryptFile.EncryFile(nameById.getPath(),taskInfo.getData().get(i).getVoidpassword());
+                        nameById.setIssecret(true);
+                        noteService.updateData(nameById.getName(),nameById);
+                    }
+                }
+            }
+        }
+    }
     @Override
     public void gettasksuccess(TaskInfo info) {
         if (info.getData() == null || info.getData().size() == 0){
@@ -165,18 +206,18 @@ public class SynVedioService extends Service implements TaskListimp{
         ActivityManager.RunningTaskInfo info = manager.getRunningTasks(1).get(0);
         String shortClassName = info.topActivity.getShortClassName();
         if (shortClassName.equals(".MainActivity") && dataBean.getType() ==1){
-        //发送特定action的广播
+            //发送特定action的广播
             Log.e("----MainActivity","有指令任务"+dataBean.getType());
-        Intent intent = new Intent();
+            Intent intent = new Intent();
             intent.putExtra("ischange","no");
-        intent.setAction("android.intent.action.MY_RECEIVER");
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("task",dataBean);
+            intent.setAction("android.intent.action.MY_RECEIVER");
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("task",dataBean);
             if (tokenChange){
                 bundle.putString("token",token);
             }
-        intent.putExtras(bundle);
-        sendBroadcast(intent);
+            intent.putExtras(bundle);
+            sendBroadcast(intent);
             tokenChange = false;
         }else
         if (shortClassName.equals(".PlayerFragmentAcivity"))
