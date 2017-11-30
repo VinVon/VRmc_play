@@ -5,8 +5,8 @@ package vr.xinjing.com.vrmc.UrlPath;
  */
 
 public class UrlHttp {
-    //测试地址czy.dd.dosnsoft.com
-    public static final String BASE_URL="http://test.med-vision.cn/api/v1/";
+    //测试地址czy.dd.dosnsoft.com  ==10.12.254.34:8080
+    public static final String BASE_URL="http://10.12.254.34:8080/api/v1/";
     //正式地址
 //    public static final String BASE_URL="http://support.med-vision.cn/api/v1/";
     //登录

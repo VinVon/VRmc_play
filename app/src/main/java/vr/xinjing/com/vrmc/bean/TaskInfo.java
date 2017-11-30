@@ -79,10 +79,28 @@ public class TaskInfo implements Serializable {
         private Object content;
         private String userId;
         private int status;
-        private int voidpassword;
+        private String voidpassword;
+        private int isencryption ;//0未加密 1已加密
+        private int jmvalues;
         private Object prescriptionContentId;
         private boolean playType;
         private boolean endType;
+
+        public int getIsencryption() {
+            return isencryption;
+        }
+
+        public void setIsencryption(int isencryption) {
+            this.isencryption = isencryption;
+        }
+
+        public int getJmvalues() {
+            return jmvalues;
+        }
+
+        public void setJmvalues(int jmvalues) {
+            this.jmvalues = jmvalues;
+        }
 
         public String getId() {
             return id;
@@ -156,11 +174,11 @@ public class TaskInfo implements Serializable {
             this.status = status;
         }
 
-        public int getVoidpassword() {
+        public String getVoidpassword() {
             return voidpassword;
         }
 
-        public void setVoidpassword(int voidpassword) {
+        public void setVoidpassword(String voidpassword) {
             this.voidpassword = voidpassword;
         }
 

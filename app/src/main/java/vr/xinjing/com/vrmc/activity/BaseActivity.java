@@ -31,7 +31,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     private void unRegisterExitReceiver() {
-
+        if (exitReceiver != null)
         unregisterReceiver(exitReceiver);
     }
     @Override

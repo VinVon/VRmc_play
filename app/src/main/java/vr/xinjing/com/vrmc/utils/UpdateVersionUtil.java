@@ -225,7 +225,7 @@ public class UpdateVersionUtil {
                 if(v.getId() == R.id.btn_update_id_ok){
                     //新版本已经下载
                     if(file.exists() && file.getName().equals("gdmsaec-app.apk")){
-                        Intent intent = ApkUtils.getInstallIntent(file);
+                        Intent intent = ApkUtils.getInstallIntent(context,file);
                         context.startActivity(intent);
                     }else{
                         //没有下载，则开启服务下载新版本

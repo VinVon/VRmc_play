@@ -47,6 +47,7 @@ import vr.xinjing.com.vrmc.presenter.AyncTimePresenter;
 import vr.xinjing.com.vrmc.presenter.LoginPresenter;
 import vr.xinjing.com.vrmc.presenter.QueryPrescriptionPresenter;
 import vr.xinjing.com.vrmc.presenter.TasklistPresenter;
+import vr.xinjing.com.vrmc.utils.MyLog;
 import vr.xinjing.com.vrmc.utils.MyToast;
 import vr.xinjing.com.vrmc.utils.NoteService;
 import vr.xinjing.com.vrmc.utils.SpUtils;
@@ -58,6 +59,7 @@ import vr.xinjing.com.vrmc.utils.ToastCommom;
  */
 
 public class SynVedioService extends Service implements TaskListimp,EncryptClick{
+    private final String TAG="SynVedioService";
     private Timer timer = new Timer();;//每过一个小时，刷新服务器视频内容列表
     private String token;
     private ConnectivityManager connectivityManager;
@@ -82,6 +84,7 @@ public class SynVedioService extends Service implements TaskListimp,EncryptClick
         EventBus.getDefault().register(this);
         noteService = ((Appaplication) getApplication()).noteService;//数据库操作类
         encryptFile = new EncryptFile(this);
+        token = SpUtils.getInstance().getToken();
         super.onCreate();
 
     }
@@ -89,7 +92,7 @@ public class SynVedioService extends Service implements TaskListimp,EncryptClick
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null){
-            token = intent.getStringExtra("token");
+//            token = intent.getStringExtra("token");
             Bundle extras = intent.getExtras();
             users = (LocalInfo) extras.getSerializable("user");
             Log.e("---service",users.getPassword()+" == "+users.getUsername());
@@ -157,9 +160,7 @@ public class SynVedioService extends Service implements TaskListimp,EncryptClick
 
     @Subscribe(threadMode = ThreadMode.BackgroundThread)
     public void helloEventBus(String message){
-
         if (taskInfo.getData().size()==2&&message.equals("dsa")){
-            Log.e("----","dsa");
             TaskInfo.DataBean dataBean = taskInfo.getData().get(1);
             sendBroadCast(dataBean);
         }
@@ -172,15 +173,17 @@ public class SynVedioService extends Service implements TaskListimp,EncryptClick
     @Subscribe(threadMode = ThreadMode.BackgroundThread)
     public void backEventBus(String message){
         if (message.equals("back")){
-
             for (int i = 0; i <taskInfo.getData().size() ; i++) {
                 if (taskInfo.getData().get(i).getType()==1){
                     Note nameById = noteService.getNameById(taskInfo.getData().get(i).getContent() + "");
-                    if (!nameById.getIssecret()){
-                    encryptFile.EncryFile(nameById.getPath(),taskInfo.getData().get(i).getVoidpassword());
-                        nameById.setIssecret(true);
-                        noteService.updateData(nameById.getName(),nameById);
-                    }
+                   if (nameById.getIssecret() != null){
+                       if (!nameById.getIssecret()&&taskInfo.getData().get(i).getJmvalues()!=0){
+                           Log.e("++synVedioService",nameById.getId()+"加密成功");
+                           encryptFile.EncryFile(nameById.getPath(),taskInfo.getData().get(i).getJmvalues());
+                           nameById.setIssecret(true);
+                           noteService.updateData(nameById.getContentid(),nameById);
+                       }
+                   }
                 }
             }
         }
@@ -188,7 +191,7 @@ public class SynVedioService extends Service implements TaskListimp,EncryptClick
     @Override
     public void gettasksuccess(TaskInfo info) {
         if (info.getData() == null || info.getData().size() == 0){
-            Log.e("----","没有指令任务");
+//            Log.e("----","没有指令任务");
         }else{ //多条指令
             Log.e("----service","有指令任务"+info.getData().size());
             for (int i = 0; i <info.getData().size() ; i++) {
@@ -231,7 +234,7 @@ public class SynVedioService extends Service implements TaskListimp,EncryptClick
             bundle.putSerializable("task",dataBean);
             intent.putExtras(bundle);
             sendBroadcast(intent);
-        }else{
+        }else if (taskInfo.getData().size() == 2){
             TaskInfo.DataBean dataBeans = taskInfo.getData().get(1);
             sendBroadCast(dataBeans);
         }

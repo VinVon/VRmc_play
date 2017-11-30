@@ -105,7 +105,7 @@ public class UpdateVersionService extends Service {
                 //收起通知栏
                 UpdateVersionUtil.collapseStatusBar(UpdateVersionService.this);
                 //自动安装新版本
-                Intent installIntent = ApkUtils.getInstallIntent(updateFile);
+                Intent installIntent = ApkUtils.getInstallIntent(UpdateVersionService.this,updateFile);
                 startActivity(installIntent);
 
             }
@@ -125,7 +125,7 @@ public class UpdateVersionService extends Service {
                     // 隐藏进度条
                     notification.contentView.setViewVisibility(R.id.progressBar1, View.GONE);
 
-                    Intent intent = ApkUtils.getInstallIntent(updateFile);
+                    Intent intent = ApkUtils.getInstallIntent(UpdateVersionService.this,updateFile);
                     PendingIntent pendingIntent = PendingIntent.getActivity(UpdateVersionService.this, 0, intent, 0);
                     notification.flags = Notification.FLAG_AUTO_CANCEL;//点击通知栏之后 消失
                     notification.contentIntent  = pendingIntent;//启动指定意图
@@ -310,7 +310,7 @@ public class UpdateVersionService extends Service {
                     //收起通知栏
                     UpdateVersionUtil.collapseStatusBar(UpdateVersionService.this);
                     //自动安装新版本
-                    Intent installIntent = ApkUtils.getInstallIntent(updateFile);
+                    Intent installIntent = ApkUtils.getInstallIntent(UpdateVersionService.this,updateFile);
                     startActivity(installIntent);
                     break;
                 default:

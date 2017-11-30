@@ -44,6 +44,15 @@
         tools:replace="android:icon"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="vr.xinjing.com.vrmc.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
         <activity android:name=".AuthorizationActivity"
             android:screenOrientation="portrait">
         </activity>
@@ -72,7 +81,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-    <activity android:name=".MusicActivity"></activity>
+        <activity android:name=".MusicActivity"></activity>
         <service android:name=".update.UpdateVersionService"></service>
         <service android:name=".utils.DownFileService"></service>
         <service android:name=".service.SynVedioService"></service>

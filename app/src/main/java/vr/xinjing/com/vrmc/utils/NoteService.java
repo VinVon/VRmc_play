@@ -6,6 +6,9 @@ package vr.xinjing.com.vrmc.utils;
 
 import android.content.Context;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 
 import me.itangqi.greendao.DaoMaster;
@@ -52,35 +55,62 @@ public class NoteService implements NoteDaoService {
         return noteDao.queryBuilder().where(NoteDao.Properties.Id.eq(id)).unique();
     }
 
-    @Override
-    public Note getNoteByText(String text) {
-        return noteDao.queryBuilder().where(NoteDao.Properties.Name.eq(text)).unique();
-    }
+//    @Override
+//    public Note getNoteByText(String text) {
+//        return noteDao.queryBuilder().where(NoteDao.Properties.Name.eq(text)).unique();
+//    }
 
+    //    @Override
+//    public boolean isExist(String name) {
+//        Note unique = noteDao.queryBuilder().where(NoteDao.Properties.Name.eq(name)).unique();
+//
+//        if (unique ==null){
+//            return  false;
+//        }else{
+//            return true;
+//        }
+//    }
     @Override
-    public boolean isExist(String name) {
-        Note unique = noteDao.queryBuilder().where(NoteDao.Properties.Name.eq(name)).unique();
+    public boolean isExistByContentId(String id) {
+        List<Note> unique = noteDao.queryBuilder().where(NoteDao.Properties.Contentid.eq(id)).list();
 
-        if (unique ==null){
+        if (unique ==null || unique.size() ==0){
             return  false;
         }else{
             return true;
         }
     }
-
     @Override
-    public void updateData(String name ,Note n) {
-        Note noteByText = getNoteByText(name);
+    public void updateData(String contentId ,Note n) {
+        Note noteByText = getNameById(contentId);
         long id = noteByText.getId();
         n.setId(id);
         noteDao.update(n);
     }
 
     @Override
+    public List<Note> getNameByIdList(String contentid) {
+        List<Note> unique = noteDao.queryBuilder().where(NoteDao.Properties.Contentid.eq(contentid)).list();
+        return unique;
+    }
+
+    @Override
     public Note getNameById(String contentid) {
-        Note unique = noteDao.queryBuilder().where(NoteDao.Properties.Contentid.eq(contentid)).unique();
-        if (unique !=null){
-            return  unique;
+        Note result = null;
+        List<Note> unique = noteDao.queryBuilder().where(NoteDao.Properties.Contentid.eq(contentid)).list();
+        if (unique.size()>1){
+            result = unique.get(0);
+            for (int i = 1; i < unique.size(); i++) {
+                Note note = unique.get(i);
+                if (datexmilions(result.getDate())<datexmilions(note.getDate())){
+                    result = note;
+                }
+            }
+        }else if (unique.size() == 1){
+            result = unique.get(0);
+        }
+        if (result !=null){
+            return  result;
         }
         return null;
     }
@@ -91,6 +121,16 @@ public class NoteService implements NoteDaoService {
 
     public List<Note> getAll() {
         return noteDao.loadAll();
+    }
+
+    public long datexmilions(String date){
+        Calendar c = Calendar.getInstance();
+        try {
+            c.setTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(date));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return c.getTimeInMillis();
     }
 }
 

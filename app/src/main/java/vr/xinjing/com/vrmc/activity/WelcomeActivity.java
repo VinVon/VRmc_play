@@ -46,6 +46,11 @@ public class WelcomeActivity extends BaseActivity implements LoginView{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.welcome_activity);
         getData();
+        //部分手机应用挂后台会重新启动应用
+        if ((getIntent().getFlags()& Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT)!=0){
+            finish();
+            return;
+        }
         handler.sendEmptyMessageDelayed(0,3000);
         if (Environment.getExternalStorageState().equals(
                 Environment.MEDIA_MOUNTED)) {
@@ -86,7 +91,7 @@ public class WelcomeActivity extends BaseActivity implements LoginView{
             int i = checkNetWork();
             if(i == 0 ){
                 ToastCommom.createInstance().ToastShow(WelcomeActivity.this,"请检查网络连接情况");
-//                exitApp();
+                exitApp();
 //                startActivity(new Intent(WelcomeActivity.this,PlayerActivity.class));
             }else{
 
@@ -140,7 +145,13 @@ public class WelcomeActivity extends BaseActivity implements LoginView{
 
     @Override
     public void updateView(LoginInfo user) {
-
+        if(isfirst){
+            saveData(false,username,passworld,user.getData().getToken());
+        }else{
+            saveData(false,username,passworld,user.getData().getToken());
+        }
+        Intent intent = new Intent(this,MainActivity.class);
+        startActivity(intent);
     }
 
     @Override
@@ -157,5 +168,10 @@ public class WelcomeActivity extends BaseActivity implements LoginView{
     public void showError(String msg) {
 
     }
-
+    public void  saveData(boolean st,String name,String pass,String token){
+        LocalInfo info = new LocalInfo(name,pass,st,token);
+        SpUtils instance = SpUtils.getInstance();
+        instance.init(this);
+        instance.saveUser(info);
+    }
 }

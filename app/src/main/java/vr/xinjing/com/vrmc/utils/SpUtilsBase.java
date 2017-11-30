@@ -26,7 +26,7 @@ public class SpUtilsBase {
 
     protected String getString(String key) {
 
-       return   mAppPreferences.getString(key,"2016-10-19");
+       return   mAppPreferences.getString(key,"2016-10-20 09:38:45");
 
     }
     //不同包中不能访问

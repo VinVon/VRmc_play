@@ -268,6 +268,15 @@ public class PrescriptionInfo implements Serializable {
             private String id;
             private String content;
             private long videosize;
+            private int isencryption ;//0未加密 1已加密
+
+            public int getIsencryption() {
+                return isencryption;
+            }
+
+            public void setIsencryption(int isencryption) {
+                this.isencryption = isencryption;
+            }
 
             public String getId() {
                 return id;

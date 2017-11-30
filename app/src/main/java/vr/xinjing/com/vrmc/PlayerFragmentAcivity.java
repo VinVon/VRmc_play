@@ -20,6 +20,7 @@ import com.utovr.player.UVMediaType;
 import de.greenrobot.event.EventBus;
 import me.itangqi.greendao.Note;
 import vr.xinjing.com.vrmc.bean.TaskInfo;
+import vr.xinjing.com.vrmc.utils.MyLog;
 import vr.xinjing.com.vrmc.utils.MyToast;
 import vr.xinjing.com.vrmc.utils.NoteService;
 
@@ -38,7 +39,7 @@ public class PlayerFragmentAcivity extends FragmentActivity implements EncryptCl
     private NoteService noteService;//数据库操作类
     private EncryptFile encryptFile;
     private Note n;
-    private int password;
+//    private int password;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -78,8 +79,10 @@ public class PlayerFragmentAcivity extends FragmentActivity implements EncryptCl
 
     @Override
     protected void onPause() {
-        Log.e("-----activity","onPause");
+        Log.e("++--activity","onPause");
+
         EventBus.getDefault().post("back");
+
         super.onPause();
 
     }
@@ -87,7 +90,7 @@ public class PlayerFragmentAcivity extends FragmentActivity implements EncryptCl
     @Override
     protected void onDestroy()
     {
-        Log.e("-----activity","dasda");
+        Log.e("++---activity","dasda");
         super.onDestroy();
         mWakeLock.release();
         unregisterReceiver(receiver);
@@ -114,7 +117,11 @@ public class PlayerFragmentAcivity extends FragmentActivity implements EncryptCl
 
     @Override
     public void encrySuccess() {
-
+        n.setIssecret(true);
+        noteService.updateData(n.getContentid(),n);
+//
+        finish();
+        EventBus.getDefault().post("dsa");
     }
 
     @Override
@@ -134,15 +141,19 @@ public class PlayerFragmentAcivity extends FragmentActivity implements EncryptCl
             Bundle extras = intent.getExtras();
             dataBean = (TaskInfo.DataBean) extras.getSerializable("task");
             n = noteService.getNameById(dataBean.getContent()+"");
-            Log.e("-------path",n.getPath()+"");
-            password =  dataBean.getVoidpassword();
+            MyLog.e("-------path",n.getPath()+"");
+//            password =  dataBean.getVoidpassword();
             if (dataBean.getType() == 2){
                 if (mPlayerFragment.getmMediaplayer().isPlaying()){
-                    Log.e("----palyactivity","停止");
 //                        mPlayerFragment.showDialog();
-//                    encryptFile.EncryFile(n.getPath(),password);
-                    finish();
-                    EventBus.getDefault().post("dsa");
+                    MyLog.e("++palyactivity",n.getId()+"加密成功");
+                    if (dataBean.getJmvalues()!=0){
+                    encryptFile.EncryFile(n.getPath(),dataBean.getJmvalues());
+                    }else{
+                        finish();
+                        EventBus.getDefault().post("dsa");
+                    }
+
                 }
                 else
                 {

@@ -9,16 +9,19 @@ import android.content.pm.ActivityInfo;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
+
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,6 +65,7 @@ import vr.xinjing.com.vrmc.update.SDCardUtils;
 import vr.xinjing.com.vrmc.update.UpdateStatus;
 import vr.xinjing.com.vrmc.update.VersionInfo;
 import vr.xinjing.com.vrmc.utils.DownFileService;
+import vr.xinjing.com.vrmc.utils.MyLog;
 import vr.xinjing.com.vrmc.utils.MyToast;
 import vr.xinjing.com.vrmc.utils.NoteService;
 import vr.xinjing.com.vrmc.utils.SpUtils;
@@ -99,6 +103,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     private MyReceiver receiver; //定义接收指令的广播
     private MyTimerTask timerTask;
     private EncryptFile encryptFile;
+    private Note n;
     private Handler mHandler = new Handler() {
 
         @Override
@@ -109,7 +114,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         }
 
     };
-
 
 
     @Override
@@ -126,32 +130,25 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        Log.e("+-----------onCreate", "我有回来了");
+        MyLog.e("+-----------onCreate", "我有回来了");
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);//设置成全屏模式
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);//强制为横屏
         getData();
         encryptFile = new EncryptFile(MainActivity.this);//初始化加密解密类
         noteService = ((Appaplication) getApplication()).noteService;//数据库操作类
 //
-        List<Note> all = noteService.getAll();
-        for (int i = 0; i <all.size() ; i++) {
-            if (all.get(i).getIssecret() == null){
-            Note ci =all.get(i);
-           ci.setIssecret(true);
-            noteService.updateData(all.get(i).getName(),ci);
-            }
-        }
+//        List<Note> all = noteService.getAll();
+//        Note noteById = noteService.getNoteById(16);
+//        noteById.setIssecret(false);
+//        noteService.updateData(noteById.getContentid(),noteById);
+//        Note noteByIds = noteService.getNoteById(18);
+//        noteByIds.setIssecret(false);
+//        noteService.updateData(noteByIds.getContentid(),noteById);
+
         queryPrescriptionPresenter = new QueryPrescriptionPresenter(MainActivity.this);
 //        endTaskPresenter = new EndTaskPresenter(MainActivity.this);
         ayncp = new AyncTimePresenter(MainActivity.this);//获取同步内容的present
 //        getTaskPresenter = new TasklistPresenter(MainActivity.this);
-        if (mTimer != null) {
-            if (timerTask != null) {
-                timerTask.cancel();  //将原任务从队列中移除
-            }
-            timerTask = new MyTimerTask();
-            mTimer.schedule(new MyTimerTask(), 0, 1000 * 60 * 60 * 24);
-        }
 
         //注册
         receiver = new MyReceiver();
@@ -160,15 +157,17 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         registerReceiver(receiver, filter);
         //开启获取指令服务
         ZLintent = new Intent(MainActivity.this, SynVedioService.class);
+        ZLintent.setPackage("vr.xinjing.com.vrmc.service");
         ZLintent.putExtra("token", token);
         Bundle bundle = new Bundle();
         bundle.putSerializable("user", users);
         ZLintent.putExtras(bundle);
         startService(ZLintent);
         //
-        Log.e("---------------token", token);
+        MyLog.e("---------------token", token);
         appName.setText("版本号：" + ApkUtils.getVersionName(this));
         tvUpdate.setOnClickListener(this);
+        UpadteVersionm();
     }
 
     //检查版本更新
@@ -190,6 +189,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                     case UpdateStatus.NO:
                         //没有新版本
                         ToastCommom.createInstance().ToastShow(getApplicationContext(), "已经是最新版本了!");
+                        if (mTimer != null) {
+                            if (timerTask != null) {
+                                timerTask.cancel();  //将原任务从队列中移除
+                            }
+                            timerTask = new MyTimerTask();
+                            mTimer.schedule(new MyTimerTask(), 0, 1000 * 60 * 60 * 24);
+                        }
                         clearUpateFile(MainActivity.this);
                         break;
                     case UpdateStatus.NOWIFI:
@@ -236,13 +242,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         } else {
             updateDir = context.getFilesDir();
         }
-        updateFile = new File(updateDir.getPath(), context.getResources()
-                .getString(R.string.app_name) + ".apk");
-        if (updateFile.exists()) {
-            Log.e("---------------update", "升级包存在，删除升级包");
-            updateFile.delete();
+//        updateFile = new File(updateDir.getPath(), context.getResources()
+//                .getString(R.string.app_name) + ".apk");
+        if (updateDir.exists()) {
+            MyLog.e("---------------update", "升级包存在，删除升级包");
+            updateDir.delete();
         } else {
-            Log.e("-----------update", "升级包不存在，不用删除升级包");
+            MyLog.e("-----------update", "升级包不存在，不用删除升级包");
         }
     }
 
@@ -296,12 +302,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             if (is) {
                 String Path = p.getData().getExt().getContent();
                 String names = getPathName(Path);
-                if (noteService.isExist(names)) {
-                    Note videoInfo = noteService.getNoteByText(names);
+                if (noteService.isExistByContentId(p.getData().getId())) {
+                    Note videoInfo = noteService.getNameById(p.getData().getId());
                     if (videoInfo.getState()) {
                         Intent intent = new Intent(MainActivity.this, PlayerFragmentAcivity.class);
                         intent.putExtra("url", videoInfo.getPath());
-                        Log.e("-------------path", videoInfo.getPath());
+                        MyLog.e("-------------path", videoInfo.getPath());
                         intent.putExtra("type", p.getData().getType());
                         startActivityForResult(intent, 1);
                     } else {
@@ -313,13 +319,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 //                List<Note> all = noteService.getAll();
 //                Intent intent = new Intent(MainActivity.this, PlayerFragmentAcivity.class);
 //                intent.putExtra("url", all.get(0).getPath());
-//                Log.e("-------------path", all.get(0).getPath());
+//                MyLog.e("-------------path", all.get(0).getPath());
 //                intent.putExtra("type", 1);
 //                startActivity(intent);
 
             } else { //需要同步内容详情的接口回调
-                Log.e("----下载time", p.getData().getVideoupdateAt() + "");
                 ayncPath.add(p);
+                MyLog.e("----下载time", p.getData().getVideoupdateAt() + "-" + needAynvcount + "==" + ayncPath.size());
                 if (ayncPath.size() == needAynvcount) {
                     List<PrescriptionInfo> newLisst = new ArrayList<>();
                     newLisst.addAll(ayncPath);
@@ -337,80 +343,104 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                     List<PrescriptionInfo> newList = new ArrayList<>();
                     newList.addAll(ayncPath);
                     for (int i = 0; i < newList.size(); i++) {//添加数据
+                        //根据url获取文件名
                         String FileName = getPathName(newList.get(i).getData().getExt().getContent());
+                        String contentId = newList.get(i).getData().getId();
+                        //根据contentId获取文件名
+                        String FileContentIdName = contentId + ".mp4";
                         if (FileName.equals("htt")) {
                             ayncPath.remove(newList.get(i));
                         } else if (FileName != null) {
-                            if (noteService.isExist(FileName)) {
-                                Note noteByText = noteService.getNoteByText(FileName);
-                                File f = new File(IConstant.STROAGE_PATH + FileName);
-                                if (f.exists()) {
+                            //通过contentId 查询视频存在数据库
+                            if (noteService.isExistByContentId(contentId)) {
+                                Note noteByText = noteService.getNameById(contentId);
+                                File f = new File(IConstant.STROAGE_PATH + noteByText.getName());
+                                File f2 = new File(IConstant.STROAGE_PATH + contentId + ".mp4");
+                                if (f.exists() || f2.exists()) {//视频存在文件夹中,更新后视频名为contentId.故需要兼容以前的命名视频
                                     String t1 = newList.get(i).getData().getVideoupdateAt();
                                     String t2 = noteByText.getDate();
                                     if (newList.get(i).getData().getVideoupdateAt().equals(noteByText.getDate())) {//相同视频未更新过
 //                                        Note noteByText = noteService.getNoteByText(FileName);
-                                        noteByText.setName(noteByText.getName());
-                                        noteByText.setState(noteByText.getState());
-                                        noteByText.setType(noteByText.getType());
-                                        noteByText.setPath(noteByText.getPath());
-                                        noteByText.setDate(noteByText.getDate());
-                                        noteByText.setVodeosize(noteByText.getVodeosize());
-                                        noteByText.setIssecret(noteByText.getIssecret());
                                         noteByText.setUrl(newList.get(i).getData().getExt().getContent());
                                         noteByText.setContentid(newList.get(i).getData().getId());
-                                        noteService.updateData(FileName, noteByText);
+                                        noteService.updateData(contentId, noteByText);
                                         ayncPath.remove(newList.get(i));
                                     } else {//相同视频更新过
-                                        f.delete();
+                                        List<Note> nameByIdList = noteService.getNameByIdList(contentId);
+                                        for (int j = 0; j < nameByIdList.size(); j++) {
+                                            Note note = nameByIdList.get(j);
+                                            File fs = new File(IConstant.STROAGE_PATH + note.getName());
+                                            File fs2 = new File(IConstant.STROAGE_PATH + contentId + ".mp4");
+                                            if (fs.exists()) {
+                                                fs.delete();
+                                            }
+                                            if (fs2.exists()) {
+                                                fs2.delete();
+                                            }
+                                        }
                                         Note ci = new Note();
-                                        ci.setName(FileName);
+                                        ci.setName(FileContentIdName);
                                         ci.setState(false);
+                                        if (newList.get(i).getData().getExt().getIsencryption() == 0) {
+                                            ci.setIssecret(false);
+                                        } else {
+                                            ci.setIssecret(true);
+                                        }
                                         ci.setType(newList.get(i).getData().getType());
-                                        ci.setPath(IConstant.STROAGE_PATH + FileName);
+                                        ci.setPath(IConstant.STROAGE_PATH + FileContentIdName);
                                         ci.setUrl(newList.get(i).getData().getExt().getContent());
                                         ci.setContentid(newList.get(i).getData().getId());
                                         ci.setDate(newList.get(i).getData().getVideoupdateAt());
                                         ci.setVodeosize(newList.get(i).getData().getExt().getVideosize());
-                                        ci.setIssecret(true);
-                                        noteService.updateData(FileName, ci);
+                                        noteService.updateData(contentId, ci);
                                         ayncPath.remove(newList.get(i));
                                     }
 
-                                } else {
+                                } else {//视频不存在存在文件夹中
                                     Note ci = new Note();
-                                    ci.setName(FileName);
+                                    ci.setName(FileContentIdName);
                                     ci.setState(false);
+                                    if (newList.get(i).getData().getExt().getIsencryption() == 0) {
+                                        ci.setIssecret(false);
+                                    } else {
+                                        ci.setIssecret(true);
+                                    }
                                     ci.setType(newList.get(i).getData().getType());
-                                    ci.setPath(IConstant.STROAGE_PATH + FileName);
+                                    ci.setPath(IConstant.STROAGE_PATH + FileContentIdName);
                                     ci.setUrl(newList.get(i).getData().getExt().getContent());
                                     ci.setContentid(newList.get(i).getData().getId());
                                     ci.setDate(newList.get(i).getData().getVideoupdateAt());
                                     ci.setVodeosize(newList.get(i).getData().getExt().getVideosize());
-                                    ci.setIssecret(true);
-                                    noteService.updateData(FileName, ci);
+                                    noteService.updateData(contentId, ci);
                                     ayncPath.remove(newList.get(i));
                                 }
-                            } else if (!noteService.isExist(FileName)) {
-                                Note n = new Note();
-                                n.setName(FileName);
-                                n.setPath(IConstant.STROAGE_PATH + FileName);
-                                n.setState(false);
-                                n.setType(newList.get(i).getData().getType());
-                                n.setUrl(newList.get(i).getData().getExt().getContent());
-                                n.setContentid(newList.get(i).getData().getId());
-                                n.setDate(newList.get(i).getData().getVideoupdateAt());
-                                n.setVodeosize(newList.get(i).getData().getExt().getVideosize());
-                                n.setIssecret(true);
-                                noteService.insertNote(n);
-                                ayncPath.remove(newList.get(i));
-                            }
+
+                            } else //通过contentId 查询视频不存在数据库中
+                                if (!noteService.isExistByContentId(contentId)) {
+                                    Note n1 = new Note();
+                                    n1.setName(FileContentIdName);
+                                    n1.setPath(IConstant.STROAGE_PATH + FileContentIdName);
+                                    n1.setState(false);
+                                    if (newList.get(i).getData().getExt().getIsencryption() == 0) {
+                                        n1.setIssecret(false);
+                                    } else {
+                                        n1.setIssecret(true);
+                                    }
+                                    n1.setType(newList.get(i).getData().getType());
+                                    n1.setUrl(newList.get(i).getData().getExt().getContent());
+                                    n1.setContentid(newList.get(i).getData().getId());
+                                    n1.setDate(newList.get(i).getData().getVideoupdateAt());
+                                    n1.setVodeosize(newList.get(i).getData().getExt().getVideosize());
+                                    noteService.insertNote(n1);
+                                    ayncPath.remove(newList.get(i));
+                                }
                         }
                     }
                     HttpHandler<File> handler = DownFileService.getHandler();
+                    noteService = NoteService.getNoteService(MainActivity.this);
                     all = noteService.getAll();//获得数据库所有文件的记录,来校验新获得的文件
                     for (int i = 0; i < all.size(); i++) {
                         if (handler == null) {
-
 //                         if (handler.getRequestCallBack().getRequestUrl() == all.get(i).getUrl() && handler.isCancelled()){//获得数据库中没有进行的任务线程
                             if (!all.get(i).getState()) {//文件没有下载完成
                                 PrescriptionInfo pp = new PrescriptionInfo();
@@ -427,9 +457,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             }
 //                         }
                         } else {
-                            Log.e("----handler!=null", "有下载handler" + handler.getRequestCallBack().getRequestUrl());
+                            MyLog.e("----handler!=null", "有下载handler");
                             if (handler.isCancelled()) {//获得数据库中没有进行的任务线程
-                                Log.e("----handler=isCancelled", "handler被取消了");
+                                MyLog.e("----handler=isCancelled", "handler被取消了");
                                 if (!all.get(i).getState()) {//文件没有下载完成
                                     PrescriptionInfo pp = new PrescriptionInfo();
                                     PrescriptionInfo.DataBean ppb = new PrescriptionInfo.DataBean();
@@ -444,7 +474,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                                     ayncPath.add(pp);
                                 }
                             } else {//该下载任务在下次刷新定时器时还处于执行状态
-                                Log.e("----handler=isCancelled", "handler取消了" + handler.getRequestCallBack().getRequestUrl());
+                                MyLog.e("----handler=isCancelled", "handler还有");
                                 List<PrescriptionInfo> newLists = new ArrayList<>();
                                 newLists.addAll(ayncPath);
                                 for (int j = 0; j < newLists.size(); j++) {
@@ -458,27 +488,31 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                     for (int i = 0; i < ayncPath.size(); i++) {
                         if (i == ayncPath.size() - 1) {
                             SYNintent = new Intent(MainActivity.this, DownFileService.class);
+                            SYNintent.setPackage("vr.xinjing.com.vrmc.utils");
                             SYNintent.putExtra("downloadUrl", ayncPath.get(i).getData().getExt().getContent());
 //                            SYNintent.putExtra("count", i);
                             SYNintent.putExtra("countnumber", ayncPath.size());
                             SYNintent.putExtra("Aynctime", NowAyncTime);
+                            SYNintent.putExtra("issecret", newList.get(i).getData().getExt().getIsencryption());
                             SYNintent.putExtra("date", ayncPath.get(i).getData().getVideoupdateAt());
                             SYNintent.putExtra("type", ayncPath.get(i).getData().getType());
                             SYNintent.putExtra("vedioSize", ayncPath.get(i).getData().getExt().getVideosize());
                             SYNintent.putExtra("ContentId", ayncPath.get(i).getData().getId());
-                            Log.e("-------rengzai", ayncPath.get(i).getData().getVideoupdateAt());
+                            MyLog.e("-------rengzai", ayncPath.get(i).getData().getVideoupdateAt());
                             startService(SYNintent);
                         } else {
                             SYNintent = new Intent(MainActivity.this, DownFileService.class);
+                            SYNintent.setPackage("vr.xinjing.com.vrmc.utils");
                             SYNintent.putExtra("downloadUrl", ayncPath.get(i).getData().getExt().getContent());
 //                            SYNintent.putExtra("count", i);
                             SYNintent.putExtra("countnumber", ayncPath.size());
                             SYNintent.putExtra("Aynctime", NowAyncTime);
+                            SYNintent.putExtra("issecret", newList.get(i).getData().getExt().getIsencryption());
                             SYNintent.putExtra("date", ayncPath.get(i).getData().getVideoupdateAt());
                             SYNintent.putExtra("type", ayncPath.get(i).getData().getType());
                             SYNintent.putExtra("vedioSize", ayncPath.get(i).getData().getExt().getVideosize());
                             SYNintent.putExtra("ContentId", ayncPath.get(i).getData().getId());
-                            Log.e("-------rengzai", ayncPath.get(i).getData().getVideoupdateAt());
+                            MyLog.e("-------rengzai", ayncPath.get(i).getData().getVideoupdateAt());
                             startService(SYNintent);
                         }
 
@@ -528,9 +562,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 //    @Override
 //    public void gettasksuccess(TaskInfo info) {
 //        if (info.getData() == null || info.getData().size() == 0) {
-//            Log.e("---------", "没有指令");
+//            MyLog.e("---------", "没有指令");
 //        } else {
-//            Log.e("---------", info.getData().get(1).getContent()+"");
+//            MyLog.e("---------", info.getData().get(1).getContent()+"");
 //            Map<String, String> priArgs = new HashMap<>();
 //            priArgs.put("contentId", info.getData().get(1).getContent()+"");
 //            priArgs.put("token", token);
@@ -541,7 +575,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 //
 //    @Override
 //    public void gettaskfailed(String msh) {
-//        Log.e("---------", msh);
+//        MyLog.e("---------", msh);
 //    }
 
 
@@ -558,13 +592,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         priArgs.put("deviceVersion", IConstant.getVersionRelease());
         priArgs.put("password", users.getPassword());
         priArgs.put("username", users.getUsername());
-        Log.e("-----passMain", users.getPassword());
-        Log.e("-----user", users.getUsername());
+        MyLog.e("-----passMain", users.getPassword());
+        MyLog.e("-----user", users.getUsername());
         lp = new LoginPresenter(new LoginView() {
             @Override
             public void updateView(LoginInfo user) {
                 token = user.getData().getToken();
-                Log.e("------------重新的token", token);
+                MyLog.e("------------重新的token", token);
                 users.setToken(token);
                 saveData(users);
 //                xinjingSeacher.performClick();
@@ -620,7 +654,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 
     @Override
     public void encrySuccess() {
-
+        Intent intents = new Intent(MainActivity.this, PlayerFragmentAcivity.class);
+        intents.putExtra("url", n.getPath());
+        MyLog.e("++解密", n.getId() + "解密");
+        n.setIssecret(false);
+        noteService.updateData(n.getContentid(), n);
+        intents.putExtra("type", 1);
+        startActivity(intents);
     }
 
     @Override
@@ -636,12 +676,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             LastAyncTime = getLastAyncTime();
             NowAyncTime = getNoewAyncTime();
 //            LastAyncTime = "2019-10-20 09:38:45";
-            Log.e("-----------当前时间", LastAyncTime);
+            MyLog.e("-----------当前时间", LastAyncTime);
             Map<String, Object> ayncmap = new HashMap<>();
             ayncmap.put("token", token);
             ayncmap.put("paging", paging);
             ayncmap.put("lastSyncAt", LastAyncTime);
-            Log.e("---haha", token + "--" + paging + "===" + LastAyncTime);
+            MyLog.e("---haha", token + "--" + paging + "===" + LastAyncTime);
             ayncp.setMap(ayncmap);
             ayncp.getAync();
         }
@@ -656,7 +696,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     //获取同步内容的回调
     @Override
     public void showsuccess(LastAyncInfo s) {
-        Log.e("---tongbu", s.getData().size() + "个" + ayncPath.size());
+        MyLog.e("---tongbu", s.getData().size() + "个" + ayncPath.size());
         needAynvcounts = s.getData().size();
         needAynvcount += s.getData().size();
         if (needAynvcounts == 10) {//分页
@@ -668,6 +708,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             ayncmap.put("token", token);
             ayncmap.put("paging", paging);
             ayncmap.put("lastSyncAt", LastAyncTime);
+            Log.e("--params", ayncmap.toString());
             ayncp.setMap(ayncmap);
             ayncp.getAync();
         } else if (ayncPath.size() == 0 && needAynvcounts < 10) {//获得需要同步的url
@@ -675,13 +716,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             for (int j = 0; j < s.getData().size(); j++) {
                 last.add(s.getData().get(j));
             }
-            Log.e("---xiazai", last.size() + "个");
+            MyLog.e("---xiazai", last.size() + "个");
             //有需要同步的url
             for (int i = 0; i < last.size(); i++) {
                 Map<String, String> priArgs = new HashMap<>();
                 priArgs.put("contentId", last.get(i).getId());
                 priArgs.put("token", token);
-                Log.e("---xiazai", last.get(i).getId() + "id" + last.get(i).getName());
+//                MyLog.e("---xiazai", last.get(i).getId() + "id" + last.get(i).getName());
+                MyLog.e("---xiazaiTAG", last.get(i).getId() + "==id==" + token);
                 int ss = checkNetWork();
                 if (ss == 0) {
                     ToastCommom.createInstance().ToastShow(MainActivity.this, "请设置网络环境");
@@ -695,16 +737,20 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 
     @Override
     public void showfaild() {
-        Log.e("---------tongbu", "没有同部署怒");
+        MyLog.e("---------tongbu", "没有同部署怒");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        this.unregisterReceiver(mReceiver);
-        unregisterReceiver(receiver);
-        stopService(SYNintent);
-        stopService(ZLintent);
+        if (mReceiver != null)
+            this.unregisterReceiver(mReceiver);
+        if (receiver != null)
+            unregisterReceiver(receiver);
+        if (SYNintent != null)
+            stopService(SYNintent);
+        if (ZLintent != null)
+            stopService(ZLintent);
     }
 
     //根据文件的url来获取数据库保存的名字，路径
@@ -728,25 +774,26 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
-                Log.e("mark", "网络状态已经改变");
                 connectivityManager = (ConnectivityManager)
                         getSystemService(Context.CONNECTIVITY_SERVICE);
+                WifiManager wifiMgr = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
                 info = connectivityManager.getActiveNetworkInfo();
                 if (info != null && info.isAvailable() && isNet) {
                     //查询数据库，是否有为下载完的
-                    Log.e("--------------mark", "可用网络");
+                    MyLog.e("--------------mark", "可用网络");
                     List<Note> all = noteService.getAll();
                     for (int i = 0; i < all.size(); i++) {
                         if (!all.get(i).getState()) {
-                            Log.e("--------------", "网络启动下载");
+                            MyLog.e("--------------", "网络启动下载");
                             SYNintent = new Intent(MainActivity.this, DownFileService.class);
-//                            if (i == all.size() - 1) {
-//                                SYNintent.putExtra("count", i);
-//                            } else {
-//                                SYNintent.putExtra("count", -1);
-//                            }
+                            SYNintent.setPackage("vr.xinjing.com.vrmc.utils");
                             SYNintent.putExtra("countnumber", all.size());
                             SYNintent.putExtra("Aynctime", NowAyncTime);
+                            if (all.get(i).getIssecret()) {
+                                SYNintent.putExtra("issecret", 1);
+                            } else {
+                                SYNintent.putExtra("issecret", 0);
+                            }
                             SYNintent.putExtra("date", all.get(i).getDate());
                             SYNintent.putExtra("downloadUrl", all.get(i).getUrl());
                             SYNintent.putExtra("type", all.get(i).getType());
@@ -757,15 +804,18 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                         }
                     }
 
-                } else if (info == null || !info.isAvailable()) {
+                } else if (info == null) {
                     isNet = true;
-                    Log.e("--------------mark", "没有可用网络");
+                    MyLog.e("--------------mark", "没有可用网络");
+                } else if (!info.isAvailable()) {
+                    isNet = true;
                 }
             }
         }
     };
 
     private String getLastAyncTime() {//获取上一次时间的时间戳
+//        SpUtils.getInstance().saveLastAynvTime("2017-11-06 23:59:59");
         return SpUtils.getInstance().getLastAyncTime();
     }
 
@@ -799,25 +849,30 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 //                    Map<String, String> priArgs = new HashMap<>();
 //                    priArgs.put("contentId", dataBean.getContent());
 //                    priArgs.put("token", MainActivity.this.token);
-//                    Log.e("---mAin type =1", dataBean.getContent());
+//                    MyLog.e("---mAin type =1", dataBean.getContent());
 //                    queryPrescriptionPresenter.setMap(priArgs);
 //                    queryPrescriptionPresenter.getPrescriptionlistcontent(true);
-                    Note n = noteService.getNameById(dataBean.getContent() + "");
+                    MyLog.e("---main", "ContentId : " + dataBean.getContent());
+                    n = noteService.getNameById(dataBean.getContent() + "");
                     if (n == null || !n.getState()) {
                         MyToast.makeText(getApplicationContext(), "资源同步中", Toast.LENGTH_SHORT).show();
                     } else {
-                        Intent intents = new Intent(MainActivity.this, PlayerFragmentAcivity.class);
-                        intents.putExtra("url", n.getPath());
-                        encryptFile.EncryFile(n.getPath(), dataBean.getVoidpassword());
-                        Log.e("-------------path", n.getPath());
-                        n.setIssecret(false);
-                        noteService.updateData(n.getName(),n);
-                        intents.putExtra("type", 1);
-                        startActivity(intents);
+                        if (n.getIssecret() == null || !n.getIssecret()) {
+                            Intent intents = new Intent(MainActivity.this, PlayerFragmentAcivity.class);
+                            intents.putExtra("url", n.getPath());
+//                                encryptFile.EncryFile(n.getPath(), dataBean.getVoidpassword());
+//                                MyLog.e("-------------path", n.getPath());
+//                                n.setIssecret(false);
+//                                noteService.updateData(n.getName(),n);
+                            intents.putExtra("type", 1);
+                            startActivity(intents);
+                        } else {
+                            encryptFile.decryFile(n.getPath(), dataBean.getVoidpassword());
+                        }
                     }
                 }
 //            else if(dataBean.getType() == 2){//停止播放
-//                Log.e("---mAin","type =2");
+//                MyLog.e("---mAin","type =2");
 //                EventBus.getDefault().post("dsa");
 //            }
             }

@@ -30,6 +30,7 @@ public class AyncTimeModel {
                     @Override
                     public Object parseNetworkResponse(Response response, int id) throws Exception {
                         Gson gson = new Gson();
+
                         LastAyncInfo lastAyncInfo = (LastAyncInfo) gson.fromJson(response.body().string(),LastAyncInfo.class);
 
                         if (lastAyncInfo.getCode() == 0 && lastAyncInfo.getData() !=null){
