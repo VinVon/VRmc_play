@@ -85,6 +85,24 @@ public class TaskInfo implements Serializable {
         private Object prescriptionContentId;
         private boolean playType;
         private boolean endType;
+        private String clickRecordId;
+        private String patientcaseId;
+
+        public String getClickRecordId() {
+            return clickRecordId;
+        }
+
+        public void setClickRecordId(String clickRecordId) {
+            this.clickRecordId = clickRecordId;
+        }
+
+        public String getPatientcaseId() {
+            return patientcaseId;
+        }
+
+        public void setPatientcaseId(String patientcaseId) {
+            this.patientcaseId = patientcaseId;
+        }
 
         public int getIsencryption() {
             return isencryption;

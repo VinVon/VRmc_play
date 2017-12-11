@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'android-apt'
-///*realm 配置这一行*/
+///*realm 配置这一行*/18
 //apply plugin: 'realm-android'
 
 android {
@@ -9,7 +9,7 @@ android {
     buildToolsVersion "23.0.3"
     defaultConfig {
         applicationId "vr.xinjing.com.vrmc"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 24
         versionCode 4
         versionName "1.0.3"

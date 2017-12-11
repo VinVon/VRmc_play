@@ -80,9 +80,7 @@ public class PlayerFragmentAcivity extends FragmentActivity implements EncryptCl
     @Override
     protected void onPause() {
         Log.e("++--activity","onPause");
-
         EventBus.getDefault().post("back");
-
         super.onPause();
 
     }
@@ -122,6 +120,8 @@ public class PlayerFragmentAcivity extends FragmentActivity implements EncryptCl
 //
         finish();
         EventBus.getDefault().post("dsa");
+        Log.e("----心率数据发送成功", "ActivityencrySuccess的EventBus");
+        EventBus.getDefault().post(dataBean);
     }
 
     @Override
@@ -152,6 +152,8 @@ public class PlayerFragmentAcivity extends FragmentActivity implements EncryptCl
                     }else{
                         finish();
                         EventBus.getDefault().post("dsa");
+                        Log.e("----心率数据发送成功", "ActivityencrySuccess的EventBus");
+                        EventBus.getDefault().post(dataBean);
                     }
 
                 }
@@ -159,6 +161,7 @@ public class PlayerFragmentAcivity extends FragmentActivity implements EncryptCl
                 {
                     Log.e("----palyactivity","播放类型");
                 }
+
             }else{
                 UVMediaPlayer uvMediaPlayer = mPlayerFragment.getmMediaplayer();
                 if (uvMediaPlayer.isPlaying()){

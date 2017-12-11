@@ -1,40 +1,46 @@
 package vr.xinjing.com.vrmc;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
-
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.demo.hotrepair.entryptlibrary.EncryptClick;
 import com.demo.hotrepair.entryptlibrary.EncryptFile;
 import com.lidroid.xutils.http.HttpHandler;
-import com.lidroid.xutils.task.Priority;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -42,20 +48,31 @@ import java.util.TimerTask;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import de.greenrobot.event.EventBus;
+import de.greenrobot.event.Subscribe;
+import de.greenrobot.event.ThreadMode;
 import me.itangqi.greendao.Note;
 import vr.xinjing.com.vrmc.activity.BaseActivity;
 import vr.xinjing.com.vrmc.bean.IConstant;
+import vr.xinjing.com.vrmc.bean.IsBleInfo;
 import vr.xinjing.com.vrmc.bean.LastAyncInfo;
 import vr.xinjing.com.vrmc.bean.LocalInfo;
 import vr.xinjing.com.vrmc.bean.LoginInfo;
 import vr.xinjing.com.vrmc.bean.PrescriptionContent;
 import vr.xinjing.com.vrmc.bean.PrescriptionInfo;
+import vr.xinjing.com.vrmc.bean.SendECGInfo;
 import vr.xinjing.com.vrmc.bean.TaskInfo;
+import vr.xinjing.com.vrmc.bluetooth.BLEControlService;
+import vr.xinjing.com.vrmc.bluetooth.BLEStatusChangeReceiver;
+import vr.xinjing.com.vrmc.bluetooth.DevicePopulWindow;
 import vr.xinjing.com.vrmc.imp.AyncTime;
+import vr.xinjing.com.vrmc.imp.IsBle;
 import vr.xinjing.com.vrmc.imp.LoginView;
 import vr.xinjing.com.vrmc.imp.QueryPrescription;
-import vr.xinjing.com.vrmc.imp.TaskListimp;
+import vr.xinjing.com.vrmc.imp.SendEcgimp;
 import vr.xinjing.com.vrmc.presenter.AyncTimePresenter;
+import vr.xinjing.com.vrmc.presenter.CheckBlePresenter;
+import vr.xinjing.com.vrmc.presenter.EndTaskPresenter;
 import vr.xinjing.com.vrmc.presenter.LoginPresenter;
 import vr.xinjing.com.vrmc.presenter.QueryPrescriptionPresenter;
 import vr.xinjing.com.vrmc.presenter.TasklistPresenter;
@@ -64,15 +81,17 @@ import vr.xinjing.com.vrmc.update.ApkUtils;
 import vr.xinjing.com.vrmc.update.SDCardUtils;
 import vr.xinjing.com.vrmc.update.UpdateStatus;
 import vr.xinjing.com.vrmc.update.VersionInfo;
+import vr.xinjing.com.vrmc.utils.Client;
 import vr.xinjing.com.vrmc.utils.DownFileService;
 import vr.xinjing.com.vrmc.utils.MyLog;
 import vr.xinjing.com.vrmc.utils.MyToast;
 import vr.xinjing.com.vrmc.utils.NoteService;
 import vr.xinjing.com.vrmc.utils.SpUtils;
+import vr.xinjing.com.vrmc.utils.ToHexByteUtils;
 import vr.xinjing.com.vrmc.utils.ToastCommom;
 import vr.xinjing.com.vrmc.utils.UpdateVersionUtil;
 
-public class MainActivity extends BaseActivity implements View.OnClickListener, QueryPrescription, AyncTime, EncryptClick {
+public class MainActivity extends BaseActivity implements View.OnClickListener, QueryPrescription, AyncTime, EncryptClick, IsBle, DevicePopulWindow.chengDeviceListener, SendEcgimp {
 
     @BindView(R.id.app_name)
     TextView appName;
@@ -81,9 +100,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     ImageView imgImg;
     @BindView(R.id.tv_update)
     TextView tvUpdate;
+    @BindView(R.id.tv_ble)
+    TextView tvBle;
+    @BindView(R.id.tv_android)
+    TextView tvAndroid;
     private LocalInfo users;
-    //    private QueryPatientPresenter queryPatientPresenter;13868001234
     private QueryPrescriptionPresenter queryPrescriptionPresenter;
+    private EndTaskPresenter mEndTaskPresenter;
+    private CheckBlePresenter mCheckBlePresenter;
     private ProgressDialog dialog;
     private List patient = new ArrayList();
     private List<PrescriptionContent.DataBean> patient_content = new ArrayList();
@@ -96,14 +120,30 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     private Timer mTimer = new Timer();//定时器检查同步内容
     private AyncTimePresenter ayncp;
     private TasklistPresenter getTaskPresenter;
-    //    private EndTaskPresenter endTaskPresenter;
     private List<PrescriptionInfo> ayncPath = new ArrayList<>();//同步内容url的集合
-    //    private BaseDao baseDao;
     private NoteService noteService;//数据库操作类
     private MyReceiver receiver; //定义接收指令的广播
     private MyTimerTask timerTask;
     private EncryptFile encryptFile;
     private Note n;
+
+    private final int RESULTCODE_TRUE_ON_BLUETOOTH = 0;
+    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothAdapter.LeScanCallback mBLEScanCallback;
+    private List<BluetoothDevice> mDataList;
+    private static final long SCAN_PERIOD = 10000; //5 seconds
+    private DevicePopulWindow mDevicePopulWindow;
+
+    private String mDeviceAddress;
+    private BluetoothDevice mBLEDevice = null;
+    private final int CONNECT_STATUS_CONNECTED = 1;
+    private final int CONNECT_STATUS_DISCONNECTED = 2;
+    private int mConnectStatus = CONNECT_STATUS_DISCONNECTED;
+    private BLEControlService mService = null;
+    BLEStatusChangeReceiver mBLEStatusChangeReceiver = new BLEStatusChangeReceiver();
+    private boolean conn_android = false;
+    final String coon_diert = "015A81080102030405060708";
+
     private Handler mHandler = new Handler() {
 
         @Override
@@ -114,7 +154,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         }
 
     };
-
 
     @Override
     protected void onResume() {
@@ -130,26 +169,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        MyLog.e("+-----------onCreate", "我有回来了");
+        EventBus.getDefault().register(this);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);//设置成全屏模式
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);//强制为横屏
         getData();
         encryptFile = new EncryptFile(MainActivity.this);//初始化加密解密类
         noteService = ((Appaplication) getApplication()).noteService;//数据库操作类
-//
-//        List<Note> all = noteService.getAll();
-//        Note noteById = noteService.getNoteById(16);
-//        noteById.setIssecret(false);
-//        noteService.updateData(noteById.getContentid(),noteById);
-//        Note noteByIds = noteService.getNoteById(18);
-//        noteByIds.setIssecret(false);
-//        noteService.updateData(noteByIds.getContentid(),noteById);
-
         queryPrescriptionPresenter = new QueryPrescriptionPresenter(MainActivity.this);
-//        endTaskPresenter = new EndTaskPresenter(MainActivity.this);
         ayncp = new AyncTimePresenter(MainActivity.this);//获取同步内容的present
-//        getTaskPresenter = new TasklistPresenter(MainActivity.this);
-
         //注册
         receiver = new MyReceiver();
         IntentFilter filter = new IntentFilter();
@@ -167,6 +194,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         MyLog.e("---------------token", token);
         appName.setText("版本号：" + ApkUtils.getVersionName(this));
         tvUpdate.setOnClickListener(this);
+        tvBle.setOnClickListener(this);
+        tvAndroid.setOnClickListener(this);
         UpadteVersionm();
     }
 
@@ -278,6 +307,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             case R.id.tv_update:
                 UpadteVersionm();
                 break;
+            case R.id.tv_ble:
+                //开启蓝牙
+                mCheckBlePresenter = new CheckBlePresenter(this);
+                mCheckBlePresenter.getDeviceIsBLEPressmes();
+                break;
+
         }
     }
 
@@ -529,24 +564,24 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        switch (requestCode) {
-            case 1:
-//                String result = data.getStringExtra("id");
-                //调用结束任务接口
-//                    int useTimes = datatimes.getUseTimes();
-//                    useTimes += 1;
-//                    datatimes.setUseTimes(useTimes);
-//                    Map<String, String> endtasks = new HashMap<>();
-//                    endtasks.put("token", token);
-//                    endtasks.put("vrRoomAppTaskId",result);
-//                    endTaskPresenter.endTask(endtasks);
-
-                break;
-        }
-    }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//
+//        switch (requestCode) {
+//            case 1:
+////                String result = data.getStringExtra("id");
+//                //调用结束任务接口
+////                    int useTimes = datatimes.getUseTimes();
+////                    useTimes += 1;
+////                    datatimes.setUseTimes(useTimes);
+////                    Map<String, String> endtasks = new HashMap<>();
+////                    endtasks.put("token", token);
+////                    endtasks.put("vrRoomAppTaskId",result);
+////                    endTaskPresenter.endTask(endtasks);
+//
+//                break;
+//        }
+//    }
 
 
     @Override
@@ -558,25 +593,131 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         }
     }
 
+    private boolean mIsScanning;
 
-//    @Override
-//    public void gettasksuccess(TaskInfo info) {
-//        if (info.getData() == null || info.getData().size() == 0) {
-//            MyLog.e("---------", "没有指令");
-//        } else {
-//            MyLog.e("---------", info.getData().get(1).getContent()+"");
-//            Map<String, String> priArgs = new HashMap<>();
-//            priArgs.put("contentId", info.getData().get(1).getContent()+"");
-//            priArgs.put("token", token);
-//            queryPrescriptionPresenter.setMap(priArgs);
-//            queryPrescriptionPresenter.getPrescriptionlistcontent(true);
-//        }
-//    }
-//
-//    @Override
-//    public void gettaskfailed(String msh) {
-//        MyLog.e("---------", msh);
-//    }
+    @Override
+    public void getIsBleSuccess(IsBleInfo info) {
+        if (info.getData().getIsble() == 0) {
+            ToastCommom.createInstance().ToastShow(this, "若需开启蓝牙功能，请向客服联系");
+        } else {
+            //账户有蓝牙权限
+            //自动开启蓝牙
+            mEndTaskPresenter = new EndTaskPresenter(this);
+            mDataList = new LinkedList<BluetoothDevice>();
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, 1);
+            mDevicePopulWindow = new DevicePopulWindow(this, this);
+            mDevicePopulWindow.showDevice(tvBle);
+            mBLEScanCallback = getBLEScanCallback();
+            checkBLEDevice();
+            scanOtherBLEDevice(!mIsScanning);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULTCODE_TRUE_ON_BLUETOOTH) {
+            // When the request to enable Bluetooth returns
+            if (resultCode == Activity.RESULT_OK) {
+                Toast.makeText(this, "蓝牙已经开启", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "设备不支持蓝牙", Toast.LENGTH_SHORT).show();
+
+            }
+        }
+    }
+
+    private void checkBLEDevice() {
+        // Use this check to determine whether BLE is supported on the device.  Then you can
+        // selectively disable BLE-related features.
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Toast.makeText(this, " ble not supported ", Toast.LENGTH_SHORT).show();
+        }
+        // Initializes a Bluetooth adapter.  For API level 18 and above, get a reference to
+        // BluetoothAdapter through BluetoothManager.
+        final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        mBluetoothAdapter = bluetoothManager.getAdapter();
+        // Checks if Bluetooth is supported on the device.
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(this, " ble not supported ", Toast.LENGTH_SHORT).show();
+            return;
+        }
+    }
+
+    private BluetoothAdapter.LeScanCallback getBLEScanCallback() {
+        return new BluetoothAdapter.LeScanCallback() {
+            @Override
+            public void onLeScan(final BluetoothDevice device, final int rssi, byte[] scanRecord) {
+                addBLEDeviceData(device);
+            }
+        };
+    }
+
+    private void addBLEDeviceData(BluetoothDevice device) {
+        boolean deviceFound = false;
+        for (BluetoothDevice listDev : mDataList) {
+            if (listDev.getAddress().equals(device.getAddress())) {
+                deviceFound = true;
+                break;
+            }
+        }
+        if (!deviceFound) {
+            if (device.getName() != null && device.getName().startsWith("Z")) {
+                mDataList.add(device);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mDevicePopulWindow.setmDevRssiMap(mDataList);
+                    }
+                });
+            }
+        }
+    }
+
+    private void scanOtherBLEDevice(boolean enable) {
+        if (enable) {
+            mDataList.clear();
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    //stop scan
+                    mIsScanning = false;
+                    mBluetoothAdapter.stopLeScan(mBLEScanCallback);
+                    tvBle.setText("蓝牙");
+                }
+            }, SCAN_PERIOD);
+            //start scan
+            mIsScanning = true;
+            mBluetoothAdapter.startLeScan(mBLEScanCallback);
+            tvBle.setText("停止");
+        } else {
+            //stop scan
+            mIsScanning = false;
+            mBluetoothAdapter.stopLeScan(mBLEScanCallback);
+            tvBle.setText("蓝牙");
+        }
+    }
+
+    @Override
+    public void selectorDevice(BluetoothDevice device) {
+        mDevicePopulWindow.close();
+        mBluetoothAdapter.stopLeScan(mBLEScanCallback);
+        mDeviceAddress = device.getAddress();
+        Log.e("---ble","地址"+mDeviceAddress);
+        initBLEControlService();
+    }
+
+    private void connectBLEDevice() {
+        if (mService != null) {
+            mService.connect(mDeviceAddress);
+        }
+    }
+
+    @Override
+    public void getIsBleFailed(IsBleInfo info) {
+
+    }
 
 
     //token 发生变化时，重新登录获取token
@@ -668,6 +809,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 
     }
 
+
     // 计时器
     class MyTimerTask extends TimerTask {
 
@@ -743,6 +885,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        EventBus.getDefault().unregister(this);
         if (mReceiver != null)
             this.unregisterReceiver(mReceiver);
         if (receiver != null)
@@ -800,7 +943,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             SYNintent.putExtra("vedioSize", all.get(i).getVodeosize());
                             SYNintent.putExtra("ContentId", all.get(i).getContentid());
                             startService(SYNintent);
-
+                            
                         }
                     }
 
@@ -878,4 +1021,184 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             }
         }
     }
+
+    /**
+     * 初始化
+     */
+    private void initBLEControlService() {
+            if (mService == null){
+                //create BLEControService
+                Intent bindIntent = new Intent(this, BLEControlService.class);
+                //register listener that listen BLE status change callback
+                LocalBroadcastManager.getInstance(this).registerReceiver(mBLEStatusChangeReceiver, makeGattUpdateIntentFilter());
+                //binding BLEControService callback
+                bindService(bindIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
+                mBLEDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mDeviceAddress);
+                //connectBLEDevice();
+                mBLEStatusChangeReceiver.setOnBLEStatusChangeListener(new BLEStatusChangeReceiver.OnBLEStatusChangeListener() {
+                    @Override
+                    public void onConnected() {
+                        Log.e("---------", "MainActivity:onConnected");
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "connected", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onDisConnected() {
+                        mService.disconnect();
+                        conn_android = false;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                tvAndroid.setText("断开连接");
+//                        if (mEcgTask != null){
+//                            mEcgTask.cancel();
+//                        }
+                            }
+                        });
+                    }
+
+
+                    @Override
+                    public void onGattServiceDiscovered() {
+
+                    }
+
+                    @Override
+                    public void onDataChange(String uuid, byte[] value, String type) {
+                        String s = ToHexByteUtils.bytesToHexString(value);
+                        if (s.equals("0100")) {
+
+                            mService.writeRXCharacteristic(ToHexByteUtils.hexStringToByte(coon_diert));
+                        } else if (s.equals("015A810100")) {
+                            tvAndroid.setText("连接成功");
+                            conn_android = true;
+//                    startEcgTask();
+                        } else if (s.startsWith("8902")&& !s.equals("8902810100")) {
+                            //发送心率数据
+                            if (!stringBuffer.contains(s)){
+                                stringBuffer+=s;
+                                if (s.startsWith("89028A08")){
+                                    Map<String, String> priArgs = new HashMap<>();
+                                    priArgs.put("bytes", stringBuffer.toString());
+                                    priArgs.put("clickRecordId", dataBean.getClickRecordId());
+                                    priArgs.put("patientcaseid", dataBean.getPatientcaseId());
+                                    priArgs.put("token", SpUtils.getInstance().getToken());
+                                    mEndTaskPresenter.sendRcgData(priArgs);
+                                }
+                            }
+
+//
+//                    Client.main(s);
+
+                        }
+                    }
+
+                    @Override
+                    public void onRssiRead(int rssi, String type) {
+                    }
+                });
+            }else {
+                connectBLEDevice();
+            }
+    }
+
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        //绑定服务时
+        public void onServiceConnected(ComponentName className, IBinder rawBinder) {
+            mService = ((BLEControlService.LocalBinder) rawBinder).getService();
+            mBLEStatusChangeReceiver.setBLEService(mService);
+            mConnectStatus = CONNECT_STATUS_CONNECTED;
+            if (!mService.initialize()) {
+                finish();
+            }
+            Toast.makeText(MainActivity.this, "connect BLE success", Toast.LENGTH_SHORT).show();
+            connectBLEDevice();
+        }
+
+        //断开服务时
+        public void onServiceDisconnected(ComponentName classname) {
+            mService = null;
+            mConnectStatus = CONNECT_STATUS_DISCONNECTED;
+            Toast.makeText(MainActivity.this, "binding service failed", Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BLEControlService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BLEControlService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BLEControlService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BLEControlService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(BLEControlService.DEVICE_DOES_NOT_SUPPORT_UART);
+        return intentFilter;
+    }
+
+    private String stringBuffer = "";
+        final String readHeart = "8902810100";
+//    final String readHeart = "8900810100";
+    private TaskInfo.DataBean dataBean;
+    private List<TaskInfo.DataBean> dataBeans = new ArrayList<>();
+
+    @Override
+    public void sendEcgSuccess(String info) {
+        Log.e("----心率数据发送成功", "心率数据发送成功");
+        if (dataBeans.size() != 0) {
+            dataBean = dataBeans.get(0);
+            dataBeans.remove(0);
+
+            if (mService != null)
+                mService.writeRXCharacteristic(ToHexByteUtils.hexStringToByte(readHeart));
+        } else {
+            dataBean = null;
+        }
+        stringBuffer = "";
+    }
+
+    @Override
+    public void sendEcgFailed(SendECGInfo info) {
+        Log.e("----", "心率数据发送失败");
+    }
+
+    @Subscribe(threadMode = ThreadMode.BackgroundThread)
+    public void backEventBus(TaskInfo.DataBean message) {
+        Log.e("------", "接收到获取蓝牙数据指令");
+        if (message != null && conn_android) {
+            if (dataBean != null) {
+                Log.e("------", "dataBean不为空，存入");
+                dataBeans.add(message);
+            } else {
+                Log.e("------", "dataBean为空,赋值");
+                dataBean = message;
+                if (mService != null)
+                    mService.writeRXCharacteristic(ToHexByteUtils.hexStringToByte(readHeart));
+            }
+        }
+    }
+
+    /**
+     * 启动心率传送任务
+     */
+//    private EcgTask mEcgTask;
+//    private void startEcgTask() {
+//        if (mTimer != null){
+//            if (mEcgTask != null){
+//                mEcgTask.cancel();  //将原任务从队列中移除
+//            }
+//            mEcgTask = new EcgTask();
+//            mTimer.schedule(mEcgTask, 0, 6000);
+//        }
+//    }
+//    // 计时器
+//    class EcgTask extends TimerTask {
+//        @Override
+//        public void run() {
+//            if (mService != null)
+//                    mService.writeRXCharacteristic(ToHexByteUtils.hexStringToByte(readHeart));
+//        }
+//    };
 }

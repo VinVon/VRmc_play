@@ -11,6 +11,8 @@
     <!-- 允许访问存储卡 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" >
     </uses-permission>
@@ -85,6 +87,8 @@
         <service android:name=".update.UpdateVersionService"></service>
         <service android:name=".utils.DownFileService"></service>
         <service android:name=".service.SynVedioService"></service>
+
+        <service android:name=".bluetooth.BLEControlService"></service>
     </application>
 
 </manifest>

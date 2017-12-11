@@ -11,6 +11,7 @@ import okhttp3.MediaType;
 import okhttp3.Response;
 import vr.xinjing.com.vrmc.UrlPath.UrlHttp;
 import vr.xinjing.com.vrmc.bean.NoDataInfo;
+import vr.xinjing.com.vrmc.bean.SendECGInfo;
 import vr.xinjing.com.vrmc.bean.TaskInfo;
 
 /**
@@ -49,9 +50,51 @@ public class EndTaskModel {
             }
         });
     }
+
+    /**
+     * 发送心率数据
+     * @param map
+     * @param endTaskListener
+     */
+    public void sendRcgData(Map<String,String> map,final SendEcgListener endTaskListener){
+        OkHttpUtils.postString()
+                .url(UrlHttp.PATH_SENDECGDATA)
+                .content(new Gson().toJson(map))
+                .mediaType(MediaType.parse("application/json; charset=utf-8"))
+                .build().execute(new Callback() {
+            @Override
+            public Object parseNetworkResponse(Response response, int id) throws Exception {
+                com.utovr.gson.Gson gson = new com.utovr.gson.Gson();
+                SendECGInfo info = (SendECGInfo) gson.fromJson(response.body().string(),SendECGInfo.class);
+                if (info.getCode() == 0){
+                    endTaskListener.sendRcgSuccess(info.getMessage());
+                } else if(info.getCode() == 95 ||info.getCode() == 96 ||info.getCode() ==97||info.getCode() ==98){
+                    endTaskListener.tokenChange();
+                }else{
+                    endTaskListener.sendRcgFailed(info);
+                }
+                return null;
+            }
+
+            @Override
+            public void onError(Call call, Exception e, int id) {
+
+            }
+
+            @Override
+            public void onResponse(Object response, int id) {
+
+            }
+        });
+    }
     public  interface EndTaskListener{
         void endTaskSuccess(String msg);
         void tokenChange();
         void endTaskFailed(String msg);
+    }
+    public  interface SendEcgListener{
+        void sendRcgSuccess(String msg);
+        void tokenChange();
+        void sendRcgFailed(SendECGInfo info);
     }
 }

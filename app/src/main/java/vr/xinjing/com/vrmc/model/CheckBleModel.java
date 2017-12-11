@@ -1,7 +1,5 @@
 package vr.xinjing.com.vrmc.model;
 
-import android.util.Log;
-
 import com.utovr.gson.Gson;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.Callback;
@@ -12,17 +10,19 @@ import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.Response;
 import vr.xinjing.com.vrmc.UrlPath.UrlHttp;
+import vr.xinjing.com.vrmc.bean.IsBleInfo;
 import vr.xinjing.com.vrmc.bean.LastAyncInfo;
-import vr.xinjing.com.vrmc.bean.PatientInfo;
+import vr.xinjing.com.vrmc.imp.IsBle;
 
 /**
- * Created by raytine on 2017/3/3.
+ * Created by raytine on 2017/11/30.
  */
 
-public class AyncTimeModel {
-    public void getAync(Map<String,Object> map, final AyncTimeModel.OnLoginListener onLoginListener){
+public class CheckBleModel {
+
+    public void getDeviceIsBLEPressmes(Map<String,String> map, final checkBleModelListener onLoginListener) {
         OkHttpUtils.postString()
-                .url(UrlHttp.PATH_AYNCLAST)
+                .url(UrlHttp.PATH_CHECKBLE)
                 .content(new Gson().toJson(map))
                 .mediaType(MediaType.parse("application/json; charset=utf-8"))
                 .build()
@@ -30,16 +30,16 @@ public class AyncTimeModel {
                     @Override
                     public Object parseNetworkResponse(Response response, int id) throws Exception {
                         Gson gson = new Gson();
-
-                        LastAyncInfo lastAyncInfo = (LastAyncInfo) gson.fromJson(response.body().string(),LastAyncInfo.class);
+                        IsBleInfo lastAyncInfo = (IsBleInfo) gson.fromJson(response.body().string(),IsBleInfo.class);
                         if (lastAyncInfo.getCode() == 0 && lastAyncInfo.getData() !=null){
-                            onLoginListener.loginSuccess(lastAyncInfo);
+                            onLoginListener.bleSuccess(lastAyncInfo);
                         }else if(lastAyncInfo.getCode() == 95 ||lastAyncInfo.getCode() == 96 ||lastAyncInfo.getCode() ==97||lastAyncInfo.getCode() ==98){
                             onLoginListener.tokenChange();
                         }else{
-                            onLoginListener.loginFailed(lastAyncInfo);
+                            onLoginListener.bleFailed(lastAyncInfo);
                         }
                         return null;
+
                     }
 
                     @Override
@@ -52,12 +52,11 @@ public class AyncTimeModel {
 
                     }
                 });
-
     }
-    public interface OnLoginListener
+    public interface checkBleModelListener
     {
-        void loginSuccess(LastAyncInfo user);
+        void bleSuccess(IsBleInfo info);
         void tokenChange();
-        void loginFailed(LastAyncInfo user);
+        void bleFailed(IsBleInfo info);
     }
 }

@@ -176,6 +176,8 @@ public class SynVedioService extends Service implements TaskListimp,EncryptClick
             for (int i = 0; i <taskInfo.getData().size() ; i++) {
                 if (taskInfo.getData().get(i).getType()==1){
                     Note nameById = noteService.getNameById(taskInfo.getData().get(i).getContent() + "");
+                    Log.e("----心率数据发送成功", "Service的EventBus");
+                    EventBus.getDefault().post(taskInfo.getData().get(i));
                    if (nameById.getIssecret() != null){
                        if (!nameById.getIssecret()&&taskInfo.getData().get(i).getJmvalues()!=0){
                            Log.e("++synVedioService",nameById.getId()+"加密成功");

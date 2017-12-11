@@ -5,8 +5,9 @@ package vr.xinjing.com.vrmc.UrlPath;
  */
 
 public class UrlHttp {
+    //test.med-vision.cn
     //测试地址czy.dd.dosnsoft.com  ==10.12.254.34:8080
-    public static final String BASE_URL="http://10.12.254.34:8080/api/v1/";
+    public static final String BASE_URL="http://test.med-vision.cn/api/v1/";
     //正式地址
 //    public static final String BASE_URL="http://support.med-vision.cn/api/v1/";
     //登录
@@ -22,9 +23,13 @@ public class UrlHttp {
     //获取版本信息
     public  static final String PATH_VERSION=BASE_URL+"appVrRoom/getVersion";
     //获取同步内容
+    public  static  final String PATH_CHECKBLE=BASE_URL+"appVrRoom/getAccountIsBle";
+    //获取s设备具有蓝牙权限
     public  static  final String PATH_AYNCLAST=BASE_URL+"appVrRoom/content/sync";
     //获取任务列表
     public  static  final String PATH_GETTASK=BASE_URL+"appVrRoom/task/list";
     //结束任务
     public  static  final String PATH_OVERTASK=BASE_URL+"appVrRoom/task/end";
+    //发送心率数据
+    public static final  String PATH_SENDECGDATA = BASE_URL+"appVrRoom/sendEcgData";
 }

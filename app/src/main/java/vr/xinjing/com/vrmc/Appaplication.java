@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 import okhttp3.*;
 import vr.xinjing.com.vrmc.utils.NoteService;
+import vr.xinjing.com.vrmc.utils.SpUtils;
 
 
 /**
@@ -26,6 +27,11 @@ public class Appaplication extends Application {
     public NoteService noteService;
     //记录是否第一次登陆
     public boolean states = true;
+
+    public static Context getContext() {
+        return appaplication;
+    }
+
     public boolean isStates() {
         return states;
     }
@@ -37,6 +43,7 @@ public class Appaplication extends Application {
     public void onCreate() {
         super.onCreate();
         appaplication = this;
+        SpUtils.getInstance().init(this);
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
 //                .addInterceptor(new LoggerInterceptor("TAG"))
                 .connectTimeout(10000L, TimeUnit.MILLISECONDS)

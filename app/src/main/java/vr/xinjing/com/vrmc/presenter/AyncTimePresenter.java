@@ -19,7 +19,6 @@ public class AyncTimePresenter {
     private Map<String,Object> map;
 
     public AyncTimePresenter(AyncTime ayncTime) {
-
         this.ayncTime = ayncTime;
         ayncTimeModel = new AyncTimeModel();
     }
